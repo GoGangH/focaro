@@ -3,7 +3,7 @@ use tauri::{AppHandle, State};
 
 use crate::errors::AppError;
 use crate::models::session::{Session, SessionStatus};
-use crate::services::{session as session_svc, tracker};
+use crate::services::{metrics as metrics_svc, session as session_svc, tracker};
 use crate::state::app_state::AppState;
 
 #[derive(Debug, serde::Serialize)]
@@ -214,51 +214,13 @@ pub async fn get_focus_stats(
         let state = state.lock().map_err(|e| AppError::Internal(e.to_string()))?;
         state.db_pool.clone()
     };
-    let conn = pool.get().map_err(AppError::from)?;
-
-    let started_at: i64 = conn
-        .query_row(
-            "SELECT started_at FROM sessions WHERE id = ?1",
-            rusqlite::params![session_id],
-            |r| r.get(0),
-        )
-        .map_err(AppError::from)?;
-
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as i64;
-    let total_secs = (now - started_at).max(0);
-
-    let mut stmt = conn
-        .prepare(
-            "SELECT classification, COALESCE(SUM(duration_secs), 0)
-             FROM activities WHERE session_id = ?1
-             GROUP BY classification",
-        )
-        .map_err(AppError::from)?;
-
-    let mut focus_secs = 0i64;
-    let mut neutral_secs = 0i64;
-    let mut distraction_secs = 0i64;
-
-    let rows = stmt
-        .query_map(rusqlite::params![session_id], |r| {
-            Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?))
-        })
-        .map_err(AppError::from)?;
-
-    for row in rows {
-        let (cls, secs) = row.map_err(AppError::from)?;
-        match cls.as_str() {
-            "Focus" => focus_secs = secs,
-            "Neutral" => neutral_secs = secs,
-            "Distraction" => distraction_secs = secs,
-            _ => {}
-        }
-    }
-
-    Ok(FocusStats { total_secs, focus_secs, neutral_secs, distraction_secs })
+    let svc = metrics_svc::query_focus_stats(&pool, &session_id)?;
+    Ok(FocusStats {
+        total_secs: svc.total_secs,
+        focus_secs: svc.focus_secs,
+        neutral_secs: svc.neutral_secs,
+        distraction_secs: svc.distraction_secs,
+    })
 }
 
 #[tauri::command]
@@ -270,52 +232,16 @@ pub async fn get_top_apps(
         let state = state.lock().map_err(|e| AppError::Internal(e.to_string()))?;
         state.db_pool.clone()
     };
-    let conn = pool.get().map_err(AppError::from)?;
-
-    let total_secs: i64 = conn
-        .query_row(
-            "SELECT COALESCE(SUM(duration_secs), 0) FROM activities WHERE session_id = ?1",
-            rusqlite::params![session_id],
-            |r| r.get(0),
-        )
-        .map_err(AppError::from)?;
-
-    if total_secs == 0 {
-        return Ok(vec![]);
-    }
-
-    let mut stmt = conn
-        .prepare(
-            "SELECT app_name,
-                    SUM(duration_secs) as total,
-                    (SELECT classification FROM activities a2
-                     WHERE a2.app_name = a.app_name AND a2.session_id = ?1
-                     ORDER BY started_at DESC LIMIT 1) as cls
-             FROM activities a
-             WHERE session_id = ?1
-             GROUP BY app_name
-             ORDER BY total DESC
-             LIMIT 10",
-        )
-        .map_err(AppError::from)?;
-
-    let rows = stmt
-        .query_map(rusqlite::params![session_id], |r| {
-            Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?, r.get::<_, String>(2)?))
+    let apps = metrics_svc::query_top_apps(&pool, &session_id)?;
+    Ok(apps
+        .into_iter()
+        .map(|a| AppStat {
+            app_name: a.app_name,
+            duration_secs: a.duration_secs,
+            classification: a.classification,
+            percentage: a.percentage,
         })
-        .map_err(AppError::from)?;
-
-    let mut result = Vec::new();
-    for row in rows {
-        let (app_name, duration, cls) = row.map_err(AppError::from)?;
-        result.push(AppStat {
-            app_name,
-            duration_secs: duration,
-            classification: cls,
-            percentage: (duration as f64 / total_secs as f64) * 100.0,
-        });
-    }
-    Ok(result)
+        .collect())
 }
 
 #[tauri::command]
