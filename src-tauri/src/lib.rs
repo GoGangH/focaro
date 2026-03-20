@@ -30,6 +30,11 @@ pub fn run() {
             let app_state = AppState::new(pool);
             app.manage(Mutex::new(app_state));
 
+            // 메뉴바 전용 앱으로 설정: 독 아이콘 숨김, 포커스 빼앗지 않음
+            // 전체화면 앱 위에 창이 제대로 표시되려면 Accessory 정책 필수
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
             #[cfg(target_os = "macos")]
             request_accessibility_permission();
 
@@ -107,7 +112,7 @@ pub fn run() {
 }
 
 /// 드롭다운을 트레이 아이콘 rect 바로 아래 중앙에 표시
-/// NSWindow 조작은 반드시 메인 스레드에서 실행해야 하므로 run_on_main_thread 사용
+/// set_position + NSWindow 조작을 단일 run_on_main_thread 블록으로 실행
 fn show_dropdown(window: &WebviewWindow, rect: Option<tauri::Rect>) {
     let scale = window.scale_factor().unwrap_or(1.0);
     let win_width = 320.0_f64;
@@ -122,18 +127,19 @@ fn show_dropdown(window: &WebviewWindow, rect: Option<tauri::Rect>) {
         (100.0, 24.0)
     };
 
-    let _ = window.set_position(tauri::LogicalPosition::new(x, y));
-
-    // NSWindow 조작을 메인 스레드에서 실행 (트레이 이벤트는 백그라운드 스레드)
+    // 포지셔닝 + NSWindow 조작을 메인 스레드에서 원자적으로 실행
     let w = window.clone();
     let _ = window.app_handle().run_on_main_thread(move || {
+        let _ = w.set_position(tauri::LogicalPosition::new(x, y));
         unsafe {
             use objc2::msg_send;
             use objc2::runtime::AnyObject;
             if let Ok(ptr) = w.ns_window() {
                 let ns_win = ptr as *mut AnyObject;
                 let _: () = msg_send![ns_win, setLevel: 101_i64];
-                // orderFrontRegardless: 앱 활성화 여부와 무관하게 최상위에 표시
+                // CanJoinAllSpaces(1) | FullScreenAuxiliary(256) = 257
+                // 전체화면 앱 위에도 표시 (Stationary 제거: 활성 스페이스로 이동 가능하게)
+                let _: () = msg_send![ns_win, setCollectionBehavior: 257_u64];
                 let _: () = msg_send![ns_win, orderFrontRegardless];
             }
         }
