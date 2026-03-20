@@ -84,7 +84,9 @@ pub fn run() {
                         }
                     };
                     if let Some(tray) = app_handle.tray_by_id("tray") {
-                        let _ = tray.set_title(title.as_deref());
+                        // 세션 없을 때 None → "🔵" 유지 (None이면 트레이 항목이 사라짐)
+                        let display = title.unwrap_or_else(|| "🔵".to_string());
+                        let _ = tray.set_title(Some(display.as_str()));
                     }
                 }
             });
@@ -105,7 +107,7 @@ pub fn run() {
 }
 
 /// 드롭다운을 트레이 아이콘 rect 바로 아래 중앙에 표시
-/// orderFront 사용 — 현재 앱의 포커스를 빼앗지 않음 (표준 macOS 메뉴바 동작)
+/// NSWindow 조작은 반드시 메인 스레드에서 실행해야 하므로 run_on_main_thread 사용
 fn show_dropdown(window: &WebviewWindow, rect: Option<tauri::Rect>) {
     let scale = window.scale_factor().unwrap_or(1.0);
     let win_width = 320.0_f64;
@@ -122,16 +124,20 @@ fn show_dropdown(window: &WebviewWindow, rect: Option<tauri::Rect>) {
 
     let _ = window.set_position(tauri::LogicalPosition::new(x, y));
 
-    unsafe {
-        use objc2::msg_send;
-        use objc2::runtime::AnyObject;
-        if let Ok(ptr) = window.ns_window() {
-            let ns_win = ptr as *mut AnyObject;
-            let _: () = msg_send![ns_win, setLevel: 101_i64];
-            // orderFrontRegardless: 앱 활성화 여부와 무관하게 최상위에 표시 (전체화면 앱 위에도 동작)
-            let _: () = msg_send![ns_win, orderFrontRegardless];
+    // NSWindow 조작을 메인 스레드에서 실행 (트레이 이벤트는 백그라운드 스레드)
+    let w = window.clone();
+    let _ = window.app_handle().run_on_main_thread(move || {
+        unsafe {
+            use objc2::msg_send;
+            use objc2::runtime::AnyObject;
+            if let Ok(ptr) = w.ns_window() {
+                let ns_win = ptr as *mut AnyObject;
+                let _: () = msg_send![ns_win, setLevel: 101_i64];
+                // orderFrontRegardless: 앱 활성화 여부와 무관하게 최상위에 표시
+                let _: () = msg_send![ns_win, orderFrontRegardless];
+            }
         }
-    }
+    });
 }
 
 /// 드롭다운 창 레벨 + collection behavior 초기 설정
