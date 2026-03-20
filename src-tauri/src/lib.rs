@@ -70,7 +70,7 @@ pub fn run() {
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 loop {
-                    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                     let title = {
                         let state = app_handle.state::<Mutex<AppState>>();
                         let state = state.lock().unwrap();
@@ -236,34 +236,13 @@ fn compute_tray_title(pool: &services::db::DbPool, session_id: &str) -> Option<S
     let elapsed = (now - started_at).max(0);
     let hours = elapsed / 3600;
     let minutes = (elapsed % 3600) / 60;
-
-    let total_secs: i64 = conn
-        .query_row(
-            "SELECT COALESCE(SUM(duration_secs), 0) FROM activities WHERE session_id = ?1",
-            rusqlite::params![session_id],
-            |r| r.get(0),
-        )
-        .unwrap_or(0);
-
-    let focus_secs: i64 = conn
-        .query_row(
-            "SELECT COALESCE(SUM(duration_secs), 0) FROM activities WHERE session_id = ?1 AND classification = 'Focus'",
-            rusqlite::params![session_id],
-            |r| r.get(0),
-        )
-        .unwrap_or(0);
-
-    let focus_pct = if total_secs > 0 {
-        (focus_secs * 100 / total_secs) as u32
-    } else {
-        0
-    };
+    let seconds = elapsed % 60;
 
     let time_str = if hours > 0 {
-        format!("{}h {}m", hours, minutes)
+        format!("{}h {:02}m", hours, minutes)
     } else {
-        format!("{}m", minutes)
+        format!("{:02}:{:02}", minutes, seconds)
     };
 
-    Some(format!("🟢 {} | Focus {}%", time_str, focus_pct))
+    Some(format!("🟢 {}", time_str))
 }

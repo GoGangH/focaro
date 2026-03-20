@@ -126,10 +126,16 @@ pub async fn get_current_session(
 pub async fn get_incomplete_session(
     state: State<'_, Mutex<AppState>>,
 ) -> Result<Option<Session>, AppError> {
-    let pool = {
+    let (pool, already_active) = {
         let state = state.lock().map_err(|e| AppError::Internal(e.to_string()))?;
-        state.db_pool.clone()
+        let active = state.current_session_id.lock()
+            .map_err(|e| AppError::Internal(e.to_string()))?.is_some();
+        (state.db_pool.clone(), active)
     };
+    // 이미 활성 세션이 있으면 복구 팝업 불필요
+    if already_active {
+        return Ok(None);
+    }
     session_svc::query_incomplete_session(&pool)
 }
 

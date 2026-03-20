@@ -4,6 +4,7 @@ import * as sessionService from "../services/session";
 
 interface UseSessionReturn {
   session: Session | null;
+  setSession: (s: Session | null) => void;
   isLoading: boolean;
   startSession: () => Promise<void>;
   endSession: () => Promise<void>;
@@ -33,5 +34,5 @@ export function useSession(): UseSessionReturn {
     }
   }, []);
 
-  return { session, isLoading, startSession, endSession };
+  return { session, setSession, isLoading, startSession, endSession };
 }

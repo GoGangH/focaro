@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { Session } from "../types/bindings";
 import { useSession } from "../hooks/useSession";
 import { SessionTimer } from "../components/Dropdown/SessionTimer";
@@ -6,11 +7,11 @@ import { SessionControls } from "../components/Dropdown/SessionControls";
 import { getIncompleteSession, resumeSession, discardIncompleteSession, openDashboard } from "../services/session";
 
 export function Dropdown() {
-  const { session, isLoading, startSession, endSession } = useSession();
+  const { session, setSession, isLoading, startSession, endSession } = useSession();
   const [incompleteSession, setIncompleteSession] = useState<Session | null>(null);
   const [recoveryChecked, setRecoveryChecked] = useState(false);
 
-  // 앱 시작 시 미완료 세션 확인
+  // 드롭다운이 표시될 때마다 미완료 세션 확인
   useEffect(() => {
     if (recoveryChecked) return;
     setRecoveryChecked(true);
@@ -22,14 +23,17 @@ export function Dropdown() {
 
   const handleResume = async () => {
     if (!incompleteSession) return;
-    await resumeSession(incompleteSession.id);
+    const resumed = await resumeSession(incompleteSession.id);
+    setSession(resumed);
     setIncompleteSession(null);
+    await getCurrentWindow().hide();
   };
 
   const handleDiscard = async () => {
     if (!incompleteSession) return;
     await discardIncompleteSession(incompleteSession.id);
     setIncompleteSession(null);
+    await getCurrentWindow().hide();
   };
 
   // 미완료 세션 복구 팝업
