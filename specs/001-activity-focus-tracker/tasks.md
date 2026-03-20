@@ -31,14 +31,14 @@
 
 **⚠️ 체크포인트**: 이 Phase가 완료되어야 Phase 3+ 작업 시작 가능
 
-- [ ] T006 `src-tauri/migrations/V1__init.sql` 작성: `sessions`, `activities`, `classification_rules` (기본 규칙 포함), `settings` 테이블 스키마 및 초기 데이터
-- [ ] T007 [P] `src-tauri/migrations/V2__archive.sql` 작성: `archived_daily_summaries`, `references` 테이블 스키마
-- [ ] T008 [P] `src-tauri/src/errors.rs` 작성: `AppError` enum (`Database`, `PermissionDenied`, `SessionAlreadyActive`, `NoActiveSession`, `NotFound`, `Internal`) — `serde::Serialize`, `specta::Type` 구현
-- [ ] T009 [P] `src-tauri/src/models/` 전체 작성: `session.rs` (Session, SessionStatus), `activity.rs` (Activity, Classification), `reference.rs` (Reference, SaveReferenceInput), `metrics.rs` (FocusMetrics, DomainSummary), `archive.rs` (ArchivedDailySummary), `settings.rs` (AppSettings) — 모두 `serde::Serialize/Deserialize`, `specta::Type` 구현
-- [ ] T010 `src-tauri/src/services/db.rs` 작성: `r2d2` + `rusqlite` 커넥션 풀 초기화, `refinery`로 마이그레이션 실행, `app.path().app_data_dir()` 기반 DB 파일 경로 설정
-- [ ] T011 [P] `src-tauri/src/state/app_state.rs` 작성: `AppState { db_pool: Pool<SqliteConnectionManager>, tracker_handle: Option<JoinHandle<()>>, current_session_id: Option<String> }` — `Mutex`로 래핑
-- [ ] T012 `src-tauri/src/lib.rs` 기본 골격 작성: Tauri builder 설정, `AppState` 등록 (`manage()`), DB 초기화 호출, tauri-specta 바인딩 생성 (`src/types/bindings.ts` 출력) 설정
-- [ ] T013 [P] `src/stores/appStore.ts` 작성: Zustand 기반 클라이언트 상태 (`currentSession`, `currentActivity`, `metrics`)
+- [x] T006 `src-tauri/migrations/V1__init.sql` 작성: `sessions`, `activities`, `classification_rules` (기본 규칙 포함), `settings` 테이블 스키마 및 초기 데이터
+- [x] T007 [P] `src-tauri/migrations/V2__archive.sql` 작성: `archived_daily_summaries`, `references` 테이블 스키마
+- [x] T008 [P] `src-tauri/src/errors.rs` 작성: `AppError` enum (`Database`, `PermissionDenied`, `SessionAlreadyActive`, `NoActiveSession`, `NotFound`, `Internal`) — `serde::Serialize`, `specta::Type` 구현
+- [x] T009 [P] `src-tauri/src/models/` 전체 작성: `session.rs` (Session, SessionStatus), `activity.rs` (Activity, Classification), `reference.rs` (Reference, SaveReferenceInput), `metrics.rs` (FocusMetrics, DomainSummary), `archive.rs` (ArchivedDailySummary), `settings.rs` (AppSettings) — 모두 `serde::Serialize/Deserialize`, `specta::Type` 구현
+- [x] T010 `src-tauri/src/services/db.rs` 작성: `r2d2` + `rusqlite` 커넥션 풀 초기화, `refinery`로 마이그레이션 실행, `app.path().app_data_dir()` 기반 DB 파일 경로 설정
+- [x] T011 [P] `src-tauri/src/state/app_state.rs` 작성: `AppState { db_pool: Pool<SqliteConnectionManager>, tracker_handle: Option<JoinHandle<()>>, current_session_id: Option<String> }` — `Mutex`로 래핑
+- [x] T012 `src-tauri/src/lib.rs` 기본 골격 작성: Tauri builder 설정, `AppState` 등록 (`manage()`), DB 초기화 호출, tauri-specta 바인딩 생성 (`src/types/bindings.ts` 출력) 설정
+- [x] T013 [P] `src/stores/appStore.ts` 작성: Zustand 기반 클라이언트 상태 (`currentSession`, `currentActivity`, `metrics`)
 
 **체크포인트**: `cargo check` 및 `cargo test` 통과, `npm test` 설정 확인
 
