@@ -84,9 +84,9 @@
 
 ### 테스트 먼저 작성 (Red) ⚠️
 
-- [ ] T028 [P] [US2] `src/__tests__/components/DonutChart.test.tsx` 작성: `{ focus: 60, neutral: 20, distraction: 20 }` 데이터로 차트 렌더링 확인, 0% 일 때 빈 상태 렌더링 테스트
-- [ ] T029 [P] [US2] `src/__tests__/components/Dropdown.test.tsx` 작성: `mockIPC()` 사용, 세션 없을 때/있을 때 렌더링 테스트
-- [ ] T030 [P] [US2] 기존 테스트 항목 — 통합 테스트로 대체 가능 (선택적)
+- [x] T028 [P] [US2] `src/__tests__/components/DonutChart.test.tsx` 작성: 렌더링, 0% 빈 상태, 100% focus, size prop 테스트 (6개 테스트)
+- [x] T029 [P] [US2] `src/__tests__/components/Dropdown.test.tsx` 작성: `mockIPC()` 사용, 세션 없을 때/있을 때, 복구 팝업, 세션 시작, 도넛 차트, 앱 리스트, Dashboard 버튼 테스트 (7개 테스트)
+- [x] T030 [P] [US2] 통합 테스트로 대체 완료
 
 ### 구현 (Green) ✅ 완료
 
@@ -112,8 +112,8 @@
 
 ### 테스트 먼저 작성 (Red) ⚠️
 
-- [ ] T039 [P] [US3] `src-tauri/src/services/metrics.rs` 내 `#[cfg(test)]` 블록 작성: focus 60s + neutral 30s + distraction 30s → 각 퍼센트 50%, 25%, 25%, 합 100% 테스트; total_secs=0 → 모든 퍼센트 0.0 테스트
-- [ ] T040 [P] [US3] `src-tauri/tests/metrics_tests.rs` 작성: `get_focus_metrics` 커맨드 통합 테스트 — 여러 활동 저장 후 메트릭 조회
+- [x] T039 [P] [US3] `src-tauri/src/services/metrics.rs` 신규 생성 + `#[cfg(test)]` 단위 테스트: 빈 세션, 활동 집계, 퍼센트 합 100%, top_apps 정렬/퍼센트/분류 (6개 단위 테스트)
+- [x] T040 [P] [US3] `src-tauri/tests/metrics_tests.rs` 통합 테스트: 복수 분류, 세션 격리, total_secs, 10개 제한, 동일 앱 합산, 퍼센트 합 100% (6개 통합 테스트)
 
 ### 구현 (Green)
 
