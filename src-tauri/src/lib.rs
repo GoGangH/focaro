@@ -6,16 +6,26 @@ pub mod models;
 pub mod services;
 pub mod state;
 
-use std::sync::{Arc, Mutex};
-use std::time::Instant;
+use std::sync::Mutex;
 use tauri::{Manager, WebviewWindow};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+
+#[cfg(target_os = "macos")]
+use tauri_nspanel::ManagerExt;
 
 use services::db;
 use state::app_state::AppState;
 
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+
+    // NSPanel 플러그인 — 전체화면 앱 위에 표시되는 메뉴바 드롭다운 구현
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.plugin(tauri_nspanel::init());
+    }
+
+    builder
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir().expect("앱 데이터 디렉토리를 찾을 수 없습니다");
             std::fs::create_dir_all(&app_data_dir)?;
@@ -30,8 +40,7 @@ pub fn run() {
             let app_state = AppState::new(pool);
             app.manage(Mutex::new(app_state));
 
-            // 메뉴바 전용 앱으로 설정: 독 아이콘 숨김, 포커스 빼앗지 않음
-            // 전체화면 앱 위에 창이 제대로 표시되려면 Accessory 정책 필수
+            // 메뉴바 전용 앱: 독 아이콘 숨김, 앱 활성화 없이 창 표시 가능
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
@@ -40,38 +49,28 @@ pub fn run() {
 
             let dropdown = app.get_webview_window("dropdown").unwrap();
 
-            // 드롭다운 창 레벨 + collection behavior 설정 (setup에서 한 번)
+            // NSWindow → NSPanel 변환 + 전체화면 위에 뜨도록 설정
             #[cfg(target_os = "macos")]
-            init_dropdown_window(&dropdown);
+            init_menubar_panel(app.handle(), &dropdown);
 
-            // shown_at: 트레이 클릭으로 창이 표시된 시각
-            let shown_at: Arc<Mutex<Option<Instant>>> = Arc::new(Mutex::new(None));
-
-            // 전역 마우스 모니터 — 반드시 main thread에서 등록해야 함
-            // setup 클로저는 main thread에서 실행되므로 여기서 등록
-            #[cfg(target_os = "macos")]
-            register_global_mouse_monitor(dropdown.clone(), shown_at.clone());
-
+            // 트레이 클릭 핸들러
             let tray_app = app.handle().clone();
-            let shown_at_tray = shown_at.clone();
             let _tray = TrayIconBuilder::with_id("tray")
                 .title("🔵")
                 .on_tray_icon_event(move |tray, event| {
-                    if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
-                        if let Some(window) = tray_app.get_webview_window("dropdown") {
-                            if window.is_visible().unwrap_or(false) {
-                                *shown_at_tray.lock().unwrap() = None;
-                                let _ = window.hide();
-                            } else {
-                                *shown_at_tray.lock().unwrap() = Some(Instant::now());
-                                let rect = tray.rect().ok().flatten();
-                                show_dropdown(&window, rect);
-                            }
-                        }
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        let rect = tray.rect().ok().flatten();
+                        toggle_panel(&tray_app, rect);
                     }
                 })
                 .build(app)?;
 
+            // 트레이 타이틀 1초 갱신 루프
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 loop {
@@ -89,7 +88,6 @@ pub fn run() {
                         }
                     };
                     if let Some(tray) = app_handle.tray_by_id("tray") {
-                        // 세션 없을 때 None → "🔵" 유지 (None이면 트레이 항목이 사라짐)
                         let display = title.unwrap_or_else(|| "🔵".to_string());
                         let _ = tray.set_title(Some(display.as_str()));
                     }
@@ -111,97 +109,90 @@ pub fn run() {
         .expect("error while running tauri application");
 }
 
-/// 드롭다운을 트레이 아이콘 rect 바로 아래 중앙에 표시
-/// set_position + NSWindow 조작을 단일 run_on_main_thread 블록으로 실행
-fn show_dropdown(window: &WebviewWindow, rect: Option<tauri::Rect>) {
-    let scale = window.scale_factor().unwrap_or(1.0);
-    let win_width = 320.0_f64;
-
-    let (x, y) = if let Some(r) = rect {
-        let ix = r.position.to_logical::<f64>(scale).x;
-        let iy = r.position.to_logical::<f64>(scale).y;
-        let iw = r.size.to_logical::<f64>(scale).width;
-        let ih = r.size.to_logical::<f64>(scale).height;
-        (ix + iw / 2.0 - win_width / 2.0, iy + ih + 2.0)
-    } else {
-        (100.0, 24.0)
+/// NSWindow를 NSPanel로 변환하여 전체화면 앱 위에서도 표시되도록 설정
+/// moa(Nexters/moa) 프로젝트와 동일한 패턴
+#[cfg(target_os = "macos")]
+fn init_menubar_panel(app_handle: &tauri::AppHandle, window: &WebviewWindow) {
+    use tauri_nspanel::{
+        cocoa::appkit::{NSMainMenuWindowLevel, NSWindowCollectionBehavior},
+        panel_delegate, WebviewWindowExt,
     };
 
-    // 포지셔닝 + NSWindow 조작을 메인 스레드에서 원자적으로 실행
-    let w = window.clone();
-    let _ = window.app_handle().run_on_main_thread(move || {
-        let _ = w.set_position(tauri::LogicalPosition::new(x, y));
-        unsafe {
-            use objc2::msg_send;
-            use objc2::runtime::AnyObject;
-            if let Ok(ptr) = w.ns_window() {
-                let ns_win = ptr as *mut AnyObject;
-                let _: () = msg_send![ns_win, setLevel: 101_i64];
-                // CanJoinAllSpaces(1) | FullScreenAuxiliary(256) = 257
-                // 전체화면 앱 위에도 표시 (Stationary 제거: 활성 스페이스로 이동 가능하게)
-                let _: () = msg_send![ns_win, setCollectionBehavior: 257_u64];
-                let _: () = msg_send![ns_win, orderFrontRegardless];
+    let panel = window.to_panel().unwrap();
+
+    // 메뉴바 레벨 바로 위 (25) — NSPopUpMenuWindowLevel(101)보다 낮아도
+    // NSPanel + NonActivatingPanel 조합이 전체화면 위에 뜨는 것을 보장
+    panel.set_level(NSMainMenuWindowLevel + 1);
+
+    // NonActivatingPanel: 패널이 키 윈도우가 되어도 앱이 활성화되지 않음
+    // 다른 앱이 포커스를 잃지 않고 드롭다운만 표시됨
+    #[allow(non_upper_case_globals)]
+    const NSWindowStyleMaskNonActivatingPanel: i32 = 1 << 7;
+    panel.set_style_mask(NSWindowStyleMaskNonActivatingPanel);
+
+    // CanJoinAllSpaces: 모든 스페이스(전체화면 포함)에 표시
+    // Stationary: 스페이스 전환 시 위치 유지
+    // FullScreenAuxiliary: 전체화면 앱 위에 보조 창으로 표시 (핵심)
+    panel.set_collection_behaviour(
+        NSWindowCollectionBehavior::NSWindowCollectionBehaviorCanJoinAllSpaces
+            | NSWindowCollectionBehavior::NSWindowCollectionBehaviorStationary
+            | NSWindowCollectionBehavior::NSWindowCollectionBehaviorFullScreenAuxiliary,
+    );
+
+    // 패널 밖 클릭 → window_did_resign_key → 자동 닫힘
+    // 글로벌 마우스 모니터 불필요, NSWindowDelegate로 처리
+    let handle = app_handle.clone();
+    let delegate = panel_delegate!(FocaroPanelDelegate { window_did_resign_key });
+    delegate.set_listener(Box::new(move |event: String| {
+        if event == "window_did_resign_key" {
+            if let Ok(panel) = handle.get_webview_panel("dropdown") {
+                panel.order_out(None);
             }
         }
-    });
+    }));
+    panel.set_delegate(delegate);
 }
 
-/// 드롭다운 창 레벨 + collection behavior 초기 설정
-#[cfg(target_os = "macos")]
-fn init_dropdown_window(window: &WebviewWindow) {
-    use objc2::msg_send;
-    use objc2::runtime::AnyObject;
-    unsafe {
-        if let Ok(ptr) = window.ns_window() {
-            let ns_win = ptr as *mut AnyObject;
-            let _: () = msg_send![ns_win, setLevel: 101_i64];
-            // CanJoinAllSpaces(1) | Stationary(16) | FullScreenAuxiliary(256) = 273
-            // Stationary: 스페이스 전환 시 창 유지
-            // FullScreenAuxiliary: 전체화면 앱 위에도 보조 창으로 표시 가능
-            let _: () = msg_send![ns_win, setCollectionBehavior: 273_u64];
+/// 드롭다운 패널 토글 (트레이 클릭 시 호출)
+fn toggle_panel(app_handle: &tauri::AppHandle, rect: Option<tauri::Rect>) {
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(panel) = app_handle.get_webview_panel("dropdown") {
+            if panel.is_visible() {
+                panel.order_out(None);
+                return;
+            }
+        }
+
+        // 트레이 아이콘 아래에 위치 지정 후 패널 표시
+        if let Some(window) = app_handle.get_webview_window("dropdown") {
+            let scale = window.scale_factor().unwrap_or(1.0);
+            let win_width = 320.0_f64;
+
+            let (x, y) = if let Some(r) = rect {
+                let ix = r.position.to_logical::<f64>(scale).x;
+                let iy = r.position.to_logical::<f64>(scale).y;
+                let iw = r.size.to_logical::<f64>(scale).width;
+                let ih = r.size.to_logical::<f64>(scale).height;
+                (ix + iw / 2.0 - win_width / 2.0, iy + ih + 2.0)
+            } else {
+                (100.0, 24.0)
+            };
+
+            let app = app_handle.clone();
+            let _ = window.app_handle().run_on_main_thread(move || {
+                if let Some(w) = app.get_webview_window("dropdown") {
+                    let _ = w.set_position(tauri::LogicalPosition::new(x, y));
+                }
+                if let Ok(panel) = app.get_webview_panel("dropdown") {
+                    panel.show();
+                }
+            });
         }
     }
 }
 
-/// 전역 마우스 클릭 모니터 등록 (main thread에서 호출해야 함)
-/// 창 밖 클릭 시 드롭다운 자동 닫힘
-#[cfg(target_os = "macos")]
-fn register_global_mouse_monitor(window: WebviewWindow, shown_at: Arc<Mutex<Option<Instant>>>) {
-    use block2::RcBlock;
-    use objc2::msg_send;
-    use objc2::runtime::AnyObject;
-
-    let block = RcBlock::new(move |_event: *mut AnyObject| {
-        if !window.is_visible().unwrap_or(false) {
-            return;
-        }
-        let elapsed = shown_at
-            .lock()
-            .unwrap()
-            .map(|t| t.elapsed())
-            .unwrap_or(std::time::Duration::ZERO);
-
-        // 창이 표시된 지 500ms 이후의 클릭만 닫힘으로 처리
-        // (트레이 아이콘 클릭 자체가 global monitor에 잡히는 것 방지)
-        if elapsed > std::time::Duration::from_millis(500) {
-            let _ = window.hide();
-        }
-    });
-
-    unsafe {
-        let mask: u64 = 1 << 1; // NSLeftMouseDown
-        let _monitor: *mut AnyObject = msg_send![
-            objc2::class!(NSEvent),
-            addGlobalMonitorForEventsMatchingMask: mask,
-            handler: &*block
-        ];
-        // block과 monitor를 앱 수명 동안 유지
-        std::mem::forget(block);
-        // _monitor는 Objective-C 런타임이 관리하므로 별도 유지 불필요
-    }
-}
-
-/// Accessibility 권한 요청 (앱 시작 시 시스템 팝업)
+/// Accessibility 권한 요청
 #[cfg(target_os = "macos")]
 fn request_accessibility_permission() {
     #[link(name = "ApplicationServices", kind = "framework")]
