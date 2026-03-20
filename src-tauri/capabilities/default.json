@@ -1,0 +1,9 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "focaro 앱 기본 권한",
+  "windows": ["dropdown", "dashboard"],
+  "permissions": [
+    "core:default"
+  ]
+}
