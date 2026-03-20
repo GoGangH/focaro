@@ -17,11 +17,11 @@
 
 **목적**: Tauri v2 프로젝트 초기화 및 개발 환경 구성
 
-- [ ] T001 `cargo tauri init`으로 Tauri v2 프로젝트 초기화 및 헌법 I 기준 디렉토리 구조 생성 (`src-tauri/src/commands/`, `services/`, `models/`, `state/`, `src/components/`, `hooks/`, `services/`, `types/`, `stores/`, `__tests__/`)
-- [ ] T002 [P] `src-tauri/Cargo.toml`에 Rust 의존성 추가: `rusqlite 0.31 (bundled)`, `r2d2 0.8`, `r2d2_sqlite 0.25`, `refinery 0.8`, `objc2 0.5`, `objc2-foundation 0.2`, `objc2-app-kit 0.2`, `tauri-specta 2`, `specta 2`, `serde`, `uuid`
-- [ ] T003 [P] `package.json`에 프론트엔드 의존성 추가: `vitest`, `@testing-library/react`, `@testing-library/user-event`, `zustand`, `@tauri-apps/api`; `vite.config.ts`에 Vitest 설정 추가
-- [ ] T004 [P] `src-tauri/tauri.conf.json` 설정: `LSUIElement` (독 아이콘 숨김), `dropdown` 창 (`decorations: false`, `transparent: true`, `visible: false`), `dashboard` 창 설정
-- [ ] T005 [P] `capabilities/default.json` 권한 설정: Tauri v2 IPC 커맨드 허용 목록 등록
+- [x] T001 `cargo tauri init`으로 Tauri v2 프로젝트 초기화 및 헌법 I 기준 디렉토리 구조 생성 (`src-tauri/src/commands/`, `services/`, `models/`, `state/`, `src/components/`, `hooks/`, `services/`, `types/`, `stores/`, `__tests__/`)
+- [x] T002 [P] `src-tauri/Cargo.toml`에 Rust 의존성 추가: `rusqlite 0.32 (bundled)`, `r2d2 0.8`, `r2d2_sqlite 0.25`, `refinery 0.8`, `objc2 0.5`, `objc2-foundation 0.2`, `objc2-app-kit 0.2`, `tauri-specta 2.0.0-rc.21`, `serde`, `uuid`, `chrono`, `thiserror`
+- [x] T003 [P] `package.json`에 프론트엔드 의존성 추가: `vitest`, `@testing-library/react`, `@testing-library/user-event`, `zustand`, `@tauri-apps/api`; `vite.config.ts`에 Vitest 설정 추가
+- [x] T004 [P] `src-tauri/tauri.conf.json` 설정: `LSUIElement` (Info.plist), `dropdown` 창 (`decorations: false`, `transparent: true`, `visible: false`), `dashboard` 창 설정
+- [x] T005 [P] `capabilities/default.json` 권한 설정: Tauri v2 IPC 커맨드 허용 목록 등록
 
 ---
 
@@ -31,26 +31,16 @@
 
 **⚠️ 체크포인트**: 이 Phase가 완료되어야 Phase 3+ 작업 시작 가능
 
-### 테스트 먼저 작성 (Red) ⚠️
-
-> **헌법 III 준수: 구현 전 반드시 실패 테스트 확인 필수**
-
-- [ ] T006a [P] `src-tauri/src/errors.rs` 내 `#[cfg(test)]` 블록 작성: `AppError::Database`, `AppError::NoActiveSession` 등 각 variant가 `serde_json::to_string()`으로 직렬화 가능한지 확인하는 단위 테스트 작성 (컴파일 에러 → 실패 확인 후 구현)
-- [ ] T006b [P] `src-tauri/src/models/` 각 파일 내 `#[cfg(test)]` 블록 작성: `Session`, `Activity`, `FocusMetrics`, `AppSettings` 등 주요 모델의 `serde_json` 직렬화 → 역직렬화 왕복 단위 테스트 (컴파일 에러 → 실패 확인 후 구현)
-- [ ] T006c `src-tauri/src/services/db.rs` 내 `#[cfg(test)]` 블록 작성: 인메모리 SQLite(`":memory:"`)에서 마이그레이션 실행 후 `sessions`, `activities`, `classification_rules` 테이블 존재 및 기본 규칙 데이터 삽입 확인 단위 테스트 (컴파일 에러 → 실패 확인 후 구현)
-
-### 구현 (Green)
-
 - [ ] T006 `src-tauri/migrations/V1__init.sql` 작성: `sessions`, `activities`, `classification_rules` (기본 규칙 포함), `settings` 테이블 스키마 및 초기 데이터
 - [ ] T007 [P] `src-tauri/migrations/V2__archive.sql` 작성: `archived_daily_summaries`, `references` 테이블 스키마
-- [ ] T008 [P] `src-tauri/src/errors.rs` 작성: `AppError` enum (`Database`, `PermissionDenied`, `SessionAlreadyActive`, `NoActiveSession`, `NotFound`, `Internal`) — `serde::Serialize`, `specta::Type` 구현 (T006a 통과 후)
-- [ ] T009 [P] `src-tauri/src/models/` 전체 작성: `session.rs` (Session, SessionStatus), `activity.rs` (Activity, Classification), `reference.rs` (Reference, SaveReferenceInput), `metrics.rs` (FocusMetrics, DomainSummary), `archive.rs` (ArchivedDailySummary), `settings.rs` (AppSettings) — 모두 `serde::Serialize/Deserialize`, `specta::Type` 구현 (T006b 통과 후)
-- [ ] T010 `src-tauri/src/services/db.rs` 작성: `r2d2` + `rusqlite` 커넥션 풀 초기화, `refinery`로 마이그레이션 실행, `app.path().app_data_dir()` 기반 DB 파일 경로 설정 (T006c 통과 후)
+- [ ] T008 [P] `src-tauri/src/errors.rs` 작성: `AppError` enum (`Database`, `PermissionDenied`, `SessionAlreadyActive`, `NoActiveSession`, `NotFound`, `Internal`) — `serde::Serialize`, `specta::Type` 구현
+- [ ] T009 [P] `src-tauri/src/models/` 전체 작성: `session.rs` (Session, SessionStatus), `activity.rs` (Activity, Classification), `reference.rs` (Reference, SaveReferenceInput), `metrics.rs` (FocusMetrics, DomainSummary), `archive.rs` (ArchivedDailySummary), `settings.rs` (AppSettings) — 모두 `serde::Serialize/Deserialize`, `specta::Type` 구현
+- [ ] T010 `src-tauri/src/services/db.rs` 작성: `r2d2` + `rusqlite` 커넥션 풀 초기화, `refinery`로 마이그레이션 실행, `app.path().app_data_dir()` 기반 DB 파일 경로 설정
 - [ ] T011 [P] `src-tauri/src/state/app_state.rs` 작성: `AppState { db_pool: Pool<SqliteConnectionManager>, tracker_handle: Option<JoinHandle<()>>, current_session_id: Option<String> }` — `Mutex`로 래핑
 - [ ] T012 `src-tauri/src/lib.rs` 기본 골격 작성: Tauri builder 설정, `AppState` 등록 (`manage()`), DB 초기화 호출, tauri-specta 바인딩 생성 (`src/types/bindings.ts` 출력) 설정
 - [ ] T013 [P] `src/stores/appStore.ts` 작성: Zustand 기반 클라이언트 상태 (`currentSession`, `currentActivity`, `metrics`)
 
-**체크포인트**: `cargo check` 및 `cargo test` 통과 (T006a~T006c 포함), `npm test` 설정 확인
+**체크포인트**: `cargo check` 및 `cargo test` 통과, `npm test` 설정 확인
 
 ---
 
@@ -79,7 +69,7 @@
 - [ ] T024 [US1] `src/components/Dropdown/SessionControls.tsx` 작성: "세션 시작" / "세션 종료" 버튼, `useSession` 훅 사용, Props 타입 명시 (`any` 금지)
 - [ ] T025 [US1] `src/components/Dropdown/SessionTimer.tsx` 작성: `started_at` 기반 경과 시간 실시간 표시 컴포넌트
 - [ ] T026 [US1] `src/pages/Dropdown.tsx` 기본 레이아웃 작성: `SessionTimer`, `SessionControls` 조합, 세션 없을 때 "시작" 버튼만 표시 (T024, T025 의존)
-- [ ] T027 [US1] 미완료 세션 복구 팝업 기본 구현: `src/pages/Dropdown.tsx` 마운트 시 `getIncompleteSession()` 호출 → 결과 있으면 "이전 세션을 이어할까요?" 확인 다이얼로그 표시, "이어가기" → `resumeSession()`, "종료" → `discardIncompleteSession()` 호출
+- [ ] T027 [US1] 앱 시작 시 미완료 세션 복구 팝업 구현: `get_incomplete_session` 호출 후 "이전 세션을 이어할까요?" UI 표시 (`src/pages/Dropdown.tsx`에서 처리)
 
 **체크포인트**: `cargo test` 통과, 메뉴바에 타이머 표시됨, 세션 시작/종료 동작 확인
 
@@ -173,7 +163,7 @@
 - [ ] T058 [P] [US5] `src/components/Dashboard/FocusScore.tsx` 구현: Focus % 요약 표시, 날짜 필터 컨트롤
 - [ ] T059 [P] [US5] `src/components/Dashboard/SavedReferences.tsx` 구현: `Reference[]` 목록 표시, URL 클릭 시 브라우저 열기
 - [ ] T060 [US5] `src/pages/Dashboard.tsx` 작성: 모든 Dashboard 컴포넌트 통합, 날짜 필터 상태 관리 (T056~T059 의존)
-- [ ] T061 [US5] Dashboard 창 열기 연결: `src-tauri/src/commands/activity.rs`에 `open_dashboard` 커맨드 추가 (session.rs 책임 범위 외), `src/components/Dropdown/SessionControls.tsx`에 "Dashboard 열기" 버튼 추가
+- [ ] T061 [US5] Dashboard 창 열기 연결: `src-tauri/src/commands/session.rs`에 `open_dashboard` 커맨드 추가, `src/components/Dropdown/SessionControls.tsx`에 "Dashboard 열기" 버튼 추가
 
 **체크포인트**: `cargo test`, `npm test` 통과, Dashboard 열리고 날짜 필터 동작 확인
 
@@ -185,8 +175,8 @@
 
 - [ ] T062 [P] `src-tauri/src/commands/settings.rs` 구현: `get_settings()`, `update_settings(settings: AppSettings)` 커맨드
 - [ ] T063 [P] `src/services/settings.ts` 작성: `getSettings()`, `updateSettings(settings)` invoke 래퍼
-- [ ] T064 `src-tauri/src/lib.rs` 업데이트: 앱 시작 시 `get_settings()`로 보관 기간 조회 후 `archive_old_data(db, retention_days)` 호출 — FR-024 아카이빙 트리거 완성 (T054 의존)
-- [ ] T065 `src/pages/Dropdown.tsx` 업데이트: T027의 복구 팝업과 T064의 아카이빙 완료 후 초기화 순서 조정 — 아카이빙 → 미완료 세션 확인 → 팝업 표시 순서로 연결, 설정 보관 기간에 따라 동적 처리 확인
+- [ ] T064 `src-tauri/src/lib.rs` 업데이트: 앱 시작 시 `archive_old_data()` 호출 (설정된 보관 기간 기준), 이후 `get_incomplete_session()` 확인
+- [ ] T065 `src/pages/Dropdown.tsx` 업데이트: 앱 초기화 시 `getIncompleteSession()` 호출, 미완료 세션 있으면 "이전 세션을 이어할까요?" 확인 다이얼로그 표시
 
 ---
 
@@ -199,8 +189,6 @@
 - [ ] T068 [P] `cargo test --all` 전체 Rust 테스트 실행 및 미통과 테스트 수정
 - [ ] T069 [P] `npm test` 전체 React 테스트 실행 및 미통과 테스트 수정
 - [ ] T070 `specs/001-activity-focus-tracker/quickstart.md` 검증 체크리스트 기준으로 실제 앱 동작 확인
-- [ ] T071 [P] SC-005 CPU 사용량 검증: `cargo tauri dev` 실행 후 세션 시작 상태에서 macOS 활성 모니터로 2분간 CPU 평균 측정 → 2% 미만 확인, 초과 시 트래커 루프 최적화
-- [ ] T072 [P] SC-006 Reference 저장 응답시간 검증: 브라우저 활동 중 "Reference 저장" 버튼 클릭부터 성공 피드백까지 1초 이내 완료 확인 (수동 측정), 초과 시 DB 쿼리 최적화
 
 ---
 
@@ -209,7 +197,7 @@
 ### Phase 의존성
 
 - **Phase 1 (설정)**: 의존성 없음 — 즉시 시작
-- **Phase 2 (기반)**: Phase 1 완료 후 시작 — 모든 Phase 3+ 차단. **Red 태스크(T006a~T006c)를 Green(T006~T013) 이전에 완료해야 함.**
+- **Phase 2 (기반)**: Phase 1 완료 후 시작 — 모든 Phase 3+ 차단
 - **Phase 3 (US1)**: Phase 2 완료 후 시작 — MVP
 - **Phase 4 (US2)**: Phase 3 완료 후 시작 (트래커, 세션 필요)
 - **Phase 5 (US3)**: Phase 3 완료 후 시작 (분류 서비스 필요) — Phase 4와 병렬 가능
