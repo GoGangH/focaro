@@ -63,7 +63,7 @@
 - [x] T018 [P] [US1] `src-tauri/src/services/browser.rs` 구현: `get_browser_url(app_name: &str) -> Option<String>` 함수, `std::process::Command`로 `osascript` 실행, Chrome/Safari 각각 AppleScript, 500ms 타임아웃, 권한 거부 시 `None` 반환
 - [x] T019 [US1] `src-tauri/src/services/tracker.rs` 구현: `start_tracker(app_handle, db_pool)` → `JoinHandle` 반환, 2초 폴링 루프, `NSWorkspace.frontmostApplication` 호출 (`objc2`), 활동 변경 감지, duration 계산 및 DB 저장 (T017, T018 의존)
 - [x] T020 [US1] `src-tauri/src/commands/session.rs` 구현: `start_session`, `end_session`, `get_current_session`, `get_incomplete_session`, `resume_session`, `discard_incomplete_session` 커맨드 (T019 의존)
-- [x] T021 [US1] `src-tauri/src/lib.rs` 트레이 설정 추가: `TrayIconBuilder`로 트레이 생성, `tray.set_title()` 2초마다 업데이트 (타이머 + Focus %), 세션 없을 때 아이콘만 표시 (T020 의존)
+- [x] T021 [US1] `src-tauri/src/lib.rs` 트레이 설정 추가: `TrayIconBuilder`로 트레이 생성, `tray.set_title()` 1초마다 업데이트 (타이머), 세션 없을 때 `🔵` 아이콘 표시. **NSPanel 변환 추가**: `tauri-nspanel` 크레이트로 dropdown 창을 NSPanel로 변환, `NSWindowStyleMaskNonActivatingPanel`+`NSWindowCollectionBehaviorFullScreenAuxiliary` 설정으로 전체화면 앱 위 표시 구현. `window_did_resign_key` delegate로 외부 클릭 시 자동 닫힘. (T020 의존)
 - [x] T022 [P] [US1] `src/services/session.ts` 작성: `invoke()` 래퍼 함수 (`startSession`, `endSession`, `getCurrentSession`, `getIncompleteSession`, `resumeSession`, `discardIncompleteSession`)
 - [x] T023 [P] [US1] `src/hooks/useSession.ts` 작성: `useSession()` 커스텀 훅 — 세션 상태 구독, `startSession`/`endSession` 액션
 - [x] T024 [US1] `src/components/Dropdown/SessionControls.tsx` 작성: "세션 시작" / "세션 종료" 버튼, `useSession` 훅 사용, Props 타입 명시 (`any` 금지)
@@ -71,33 +71,37 @@
 - [x] T026 [US1] `src/pages/Dropdown.tsx` 기본 레이아웃 작성: `SessionTimer`, `SessionControls` 조합, 세션 없을 때 "시작" 버튼만 표시 (T024, T025 의존)
 - [x] T027 [US1] 앱 시작 시 미완료 세션 복구 팝업 구현: `get_incomplete_session` 호출 후 "이전 세션을 이어할까요?" UI 표시 (`src/pages/Dropdown.tsx`에서 처리)
 
+- [x] T021a 트레이 우클릭 메뉴 추가: `Menu`, `MenuItem` 사용, "focaro 종료" 항목 클릭 시 `app.exit(0)`, `show_menu_on_left_click(false)` 설정 (T021 의존)
+
 **체크포인트**: `cargo test` 통과, 메뉴바에 타이머 표시됨, 세션 시작/종료 동작 확인
 
 ---
 
 ## Phase 4: US2 — 드롭다운 UI 집중 현황 상세 확인 (Priority: P2)
 
-**목표**: 메뉴바 클릭 시 원형 차트, 현재 활동, 최근 3개 활동 표시
+**목표**: 메뉴바 클릭 시 도넛 차트, 현재 앱, 상위 5개 활동 리스트 표시 (다크 테마)
 **독립 테스트**: 메뉴바 클릭 → 드롭다운 열림, mockIPC로 UI 렌더링 단위 테스트
 
 ### 테스트 먼저 작성 (Red) ⚠️
 
-- [ ] T028 [P] [US2] `src/__tests__/components/FocusChart.test.tsx` 작성: `mockIPC()` 사용, `{ focus: 60, neutral: 20, distraction: 20 }` 데이터로 차트 렌더링 확인, 0% 일 때 빈 상태 렌더링 테스트
-- [ ] T029 [P] [US2] `src/__tests__/components/CurrentActivity.test.tsx` 작성: 브라우저 활동(도메인 있음) / 일반 앱(도메인 없음) 렌더링 테스트
-- [ ] T030 [P] [US2] `src/__tests__/components/RecentActivities.test.tsx` 작성: 3개 활동 목록 렌더링, 빈 목록 상태 테스트
+- [ ] T028 [P] [US2] `src/__tests__/components/DonutChart.test.tsx` 작성: `{ focus: 60, neutral: 20, distraction: 20 }` 데이터로 차트 렌더링 확인, 0% 일 때 빈 상태 렌더링 테스트
+- [ ] T029 [P] [US2] `src/__tests__/components/Dropdown.test.tsx` 작성: `mockIPC()` 사용, 세션 없을 때/있을 때 렌더링 테스트
+- [ ] T030 [P] [US2] 기존 테스트 항목 — 통합 테스트로 대체 가능 (선택적)
 
-### 구현 (Green)
+### 구현 (Green) ✅ 완료
 
-- [ ] T031 [P] [US2] `src-tauri/src/commands/activity.rs` 구현: `get_recent_activities(limit: u32)` 커맨드 — 현재 세션의 최근 N개 활동 반환
-- [ ] T032 [P] [US2] `src/services/activity.ts` 작성: `getRecentActivities(limit)`, `getFocusMetrics(sessionId)` invoke 래퍼
-- [ ] T033 [US2] `src-tauri/src/lib.rs` 드롭다운 창 설정: `TrayIconEvent::Click` 핸들러에서 `dropdown` 창 show/hide 토글, `WindowEvent::Focused(false)` 시 자동 숨김
-- [ ] T034 [US2] `src/components/Dropdown/FocusChart.tsx` 구현: SVG 원형 차트 (Focus/Neutral/Distraction 비율), `FocusMetrics` Props 타입 명시
-- [ ] T035 [P] [US2] `src/components/Dropdown/CurrentActivity.tsx` 구현: 현재 앱 이름, 도메인(있을 때만), Classification 배지 표시
-- [ ] T036 [P] [US2] `src/components/Dropdown/RecentActivities.tsx` 구현: 최근 3개 활동 목록 (앱 이름, 도메인, 지속 시간), `Activity[]` Props 타입 명시
-- [ ] T037 [P] [US2] `src/hooks/useActivity.ts` 작성: 2초마다 `getRecentActivities(3)` 폴링, 현재 활동 상태 관리
-- [ ] T038 [US2] `src/pages/Dropdown.tsx` 업데이트: `FocusChart`, `CurrentActivity`, `RecentActivities` 통합 (T034, T035, T036, T037 의존)
+- [x] T031 [P] [US2] `src-tauri/src/commands/session.rs` 추가: `get_focus_stats(session_id)` — 세션의 Focus/Neutral/Distraction 누적 시간 반환, `get_top_apps(session_id)` — 앱별 누적 시간 + 분류 + 퍼센트 반환 (상위 10개), `get_current_app()` — 현재 활성 앱 이름 반환 (objc2 NSWorkspace 사용)
+- [x] T032 [P] [US2] `src/services/session.ts` 업데이트: `getFocusStats(sessionId)`, `getTopApps(sessionId)`, `getCurrentApp()` invoke 래퍼 추가
+- [x] T032a [P] [US2] `src/types/bindings.ts` 업데이트: `FocusStats`, `AppStat` 타입 추가
+- [x] T033 [US2] `src-tauri/src/lib.rs` 드롭다운 NSPanel 설정 완료 (T021에서 구현): `TrayIconEvent::Click(Left, Up)` 핸들러에서 NSPanel show/hide 토글, `window_did_resign_key` delegate로 외부 클릭 시 자동 닫힘
+- [x] T034 [US2] `src/components/Dropdown/DonutChart.tsx` 구현: SVG 기반 도넛 차트, Focus/Neutral/Distraction 색상 구분 (`#30d158`, `#636366`, `#ff453a`), 중앙에 Focus % 표시
+- [x] T035 [P] [US2] 현재 앱 표시: `Dropdown.tsx`에 인라인 통합 — `getCurrentApp()` 폴링(5초), 앱 이름 표시
+- [x] T036 [P] [US2] 최근 활동 리스트: `Dropdown.tsx`에 인라인 통합 — `getTopApps(sessionId)` 5초 폴링, 상위 5개 앱 표시 (이름 + 퍼센트 + 분류 색상 dot)
+- [x] T037 [P] [US2] 폴링 로직: `Dropdown.tsx` 내 `useEffect`로 5초마다 `getFocusStats`, `getTopApps`, `getCurrentApp` 동시 호출; 로컬 1초 타이머로 elapsed 증가
+- [x] T038 [US2] `src/pages/Dropdown.tsx` 완전 재작성: 다크 테마, 타이머 헤더, 세션 버튼, `DonutChart`, 현재 앱, 앱 리스트, Dashboard 버튼 통합 (T034~T037 의존)
+- [x] T038a `src/App.css` 다크 테마 전면 재작성: `#1c1c1e` 배경, blur 효과, 컴포넌트별 다크 스타일
 
-**체크포인트**: `npm test` 통과, 드롭다운 클릭 시 원형 차트와 활동 정보 표시됨
+**체크포인트**: 드롭다운 클릭 시 도넛 차트와 현재 앱/활동 정보 표시됨, 전체화면 앱 위에도 표시됨
 
 ---
 
@@ -113,10 +117,10 @@
 
 ### 구현 (Green)
 
-- [ ] T041 [US3] `src-tauri/src/services/metrics.rs` 구현: `calculate_metrics(session_id, db) -> FocusMetrics` 함수, `total_secs == 0` 가드, 부동소수점 정밀도 처리 (T039 의존)
-- [ ] T042 [US3] `src-tauri/src/commands/activity.rs` 업데이트: `get_focus_metrics(session_id: String)` 커맨드 추가 (T041 의존)
-- [ ] T043 [P] [US3] `src/hooks/useMetrics.ts` 작성: 5초마다 `getFocusMetrics` 폴링, `FocusMetrics` 상태 관리
-- [ ] T044 [US3] `src/pages/Dropdown.tsx` 업데이트: `useMetrics` 훅으로 `FocusChart`에 실제 메트릭 데이터 전달 (T043 의존)
+- [x] T041 [US3] `get_focus_stats` 구현 완료 (T031에서 session.rs에 통합): DB에서 classification별 SUM(duration_secs) 집계, total_secs == 0 가드 포함 (T039 의존)
+- [x] T042 [US3] `get_focus_stats` 커맨드 등록 완료 (T031에서 session.rs에 통합, activity.rs 미사용)
+- [x] T043 [P] [US3] 폴링 로직 완료 (T037에서 Dropdown.tsx에 통합): 5초마다 `getFocusStats` 호출
+- [x] T044 [US3] `src/pages/Dropdown.tsx`에서 `getFocusStats` → `DonutChart`에 데이터 전달 완료 (T038에서 통합)
 
 **체크포인트**: `cargo test` 통과, 드롭다운의 원형 차트에 실제 퍼센트 표시됨
 

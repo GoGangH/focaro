@@ -1,25 +1,74 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import type { Session } from "../types/bindings";
+import type { Session, FocusStats, AppStat } from "../types/bindings";
 import { useSession } from "../hooks/useSession";
-import { SessionTimer } from "../components/Dropdown/SessionTimer";
-import { SessionControls } from "../components/Dropdown/SessionControls";
-import { getIncompleteSession, resumeSession, discardIncompleteSession, openDashboard } from "../services/session";
+import {
+  getIncompleteSession,
+  resumeSession,
+  discardIncompleteSession,
+  openDashboard,
+  getFocusStats,
+  getTopApps,
+  getCurrentApp,
+} from "../services/session";
+import { DonutChart } from "../components/Dropdown/DonutChart";
+
+function formatTimer(totalSecs: number): string {
+  const h = Math.floor(totalSecs / 3600);
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = totalSecs % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m`;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function classColor(cls: string): string {
+  if (cls === "Focus") return "#30d158";
+  if (cls === "Distraction") return "#ff453a";
+  return "#636366";
+}
 
 export function Dropdown() {
   const { session, setSession, isLoading, startSession, endSession } = useSession();
   const [incompleteSession, setIncompleteSession] = useState<Session | null>(null);
   const [recoveryChecked, setRecoveryChecked] = useState(false);
+  const [stats, setStats] = useState<FocusStats | null>(null);
+  const [topApps, setTopApps] = useState<AppStat[]>([]);
+  const [currentApp, setCurrentApp] = useState<string | null>(null);
+  const [elapsed, setElapsed] = useState(0);
 
-  // 드롭다운이 표시될 때마다 미완료 세션 확인
+  // Recovery check on mount
   useEffect(() => {
     if (recoveryChecked) return;
     setRecoveryChecked(true);
-
-    getIncompleteSession().then((s) => {
-      if (s) setIncompleteSession(s);
-    });
+    getIncompleteSession().then((s) => { if (s) setIncompleteSession(s); });
   }, [recoveryChecked]);
+
+  // Poll stats every 5s when session active
+  const refreshStats = useCallback(async (sid: string) => {
+    const [s, apps, app] = await Promise.all([
+      getFocusStats(sid),
+      getTopApps(sid),
+      getCurrentApp(),
+    ]);
+    setStats(s);
+    setTopApps(apps);
+    setCurrentApp(app);
+    setElapsed(s.total_secs);
+  }, []);
+
+  useEffect(() => {
+    if (!session) { setStats(null); setTopApps([]); setElapsed(0); return; }
+    refreshStats(session.id);
+    const interval = setInterval(() => refreshStats(session.id), 5000);
+    return () => clearInterval(interval);
+  }, [session, refreshStats]);
+
+  // Local timer tick every second
+  useEffect(() => {
+    if (!session) return;
+    const tick = setInterval(() => setElapsed((e) => e + 1), 1000);
+    return () => clearInterval(tick);
+  }, [session]);
 
   const handleResume = async () => {
     if (!incompleteSession) return;
@@ -36,36 +85,78 @@ export function Dropdown() {
     await getCurrentWindow().hide();
   };
 
-  // 미완료 세션 복구 팝업
+  // Recovery dialog
   if (incompleteSession) {
     return (
       <div className="dropdown dropdown--recovery">
         <p className="recovery__title">이전 세션이 종료되지 않았습니다</p>
         <p className="recovery__subtitle">이어서 진행할까요?</p>
         <div className="recovery__actions">
-          <button onClick={handleResume} className="session-btn session-btn--start">
-            이어가기
-          </button>
-          <button onClick={handleDiscard} className="session-btn session-btn--end">
-            종료
-          </button>
+          <button onClick={handleResume} className="session-btn session-btn--start">이어가기</button>
+          <button onClick={handleDiscard} className="session-btn session-btn--end">종료</button>
         </div>
       </div>
     );
   }
 
+  const focusSecs = stats?.focus_secs ?? 0;
+  const neutralSecs = stats?.neutral_secs ?? 0;
+  const distractionSecs = stats?.distraction_secs ?? 0;
+  const totalSecs = stats?.total_secs ?? 0;
+  const focusPct = totalSecs > 0 ? Math.round((focusSecs / totalSecs) * 100) : 0;
+
   return (
     <div className="dropdown">
-      <SessionTimer session={session} />
-      <SessionControls
-        session={session}
-        isLoading={isLoading}
-        onStart={startSession}
-        onEnd={endSession}
-      />
-      <button onClick={openDashboard} className="dashboard-btn">
-        Dashboard 열기
+      {/* Header: timer + focus % */}
+      <div className="dd-header">
+        <div className="dd-timer">{session ? formatTimer(elapsed) : "--:--"}</div>
+        {session && (
+          <div className="dd-focus-pct" style={{ color: "#30d158" }}>
+            Focus {focusPct}%
+          </div>
+        )}
+      </div>
+
+      {/* Session button */}
+      <button
+        className={`session-btn ${session ? "session-btn--end" : "session-btn--start"}`}
+        disabled={isLoading}
+        onClick={session ? endSession : startSession}
+      >
+        {session ? "세션 종료" : "세션 시작"}
       </button>
+
+      {/* Donut chart + current app */}
+      {session && (
+        <div className="dd-middle">
+          <DonutChart
+            focus={focusSecs}
+            neutral={neutralSecs}
+            distraction={distractionSecs}
+          />
+          <div className="dd-current-app">
+            <div className="dd-current-app__label">현재 앱</div>
+            <div className="dd-current-app__name">{currentApp ?? "—"}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Recent apps list */}
+      {session && topApps.length > 0 && (
+        <div className="dd-apps">
+          <div className="dd-apps__title">최근 활동</div>
+          {topApps.slice(0, 5).map((app) => (
+            <div key={app.app_name} className="dd-app-row">
+              <span className="dd-app-row__dot" style={{ background: classColor(app.classification) }} />
+              <span className="dd-app-row__name">{app.app_name}</span>
+              <span className="dd-app-row__pct">{Math.round(app.percentage)}%</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Footer */}
+      <button onClick={openDashboard} className="dashboard-btn">Dashboard 열기</button>
     </div>
   );
 }

@@ -8,6 +8,7 @@ pub mod state;
 
 use std::sync::Mutex;
 use tauri::{Manager, WebviewWindow};
+use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 
 #[cfg(target_os = "macos")]
@@ -53,10 +54,21 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             init_menubar_panel(app.handle(), &dropdown);
 
+            // 트레이 우클릭 메뉴
+            let quit_item = MenuItem::with_id(app, "quit", "focaro 종료", true, None::<&str>)?;
+            let tray_menu = Menu::with_items(app, &[&quit_item])?;
+
             // 트레이 클릭 핸들러
             let tray_app = app.handle().clone();
             let _tray = TrayIconBuilder::with_id("tray")
                 .title("🔵")
+                .menu(&tray_menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(|app, event| {
+                    if event.id() == "quit" {
+                        app.exit(0);
+                    }
+                })
                 .on_tray_icon_event(move |tray, event| {
                     if let TrayIconEvent::Click {
                         button: MouseButton::Left,
@@ -104,6 +116,9 @@ pub fn run() {
             commands::session::resume_session,
             commands::session::discard_incomplete_session,
             commands::session::open_dashboard,
+            commands::session::get_focus_stats,
+            commands::session::get_top_apps,
+            commands::session::get_current_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

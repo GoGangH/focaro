@@ -23,6 +23,20 @@ export interface Activity {
   duration_secs: number;
 }
 
+export interface FocusStats {
+  total_secs: number;
+  focus_secs: number;
+  neutral_secs: number;
+  distraction_secs: number;
+}
+
+export interface AppStat {
+  app_name: string;
+  duration_secs: number;
+  classification: Classification;
+  percentage: number;
+}
+
 export interface FocusMetrics {
   total_secs: number;
   focus_secs: number;

@@ -6,6 +6,22 @@ use crate::models::session::{Session, SessionStatus};
 use crate::services::{session as session_svc, tracker};
 use crate::state::app_state::AppState;
 
+#[derive(Debug, serde::Serialize)]
+pub struct FocusStats {
+    pub total_secs: i64,
+    pub focus_secs: i64,
+    pub neutral_secs: i64,
+    pub distraction_secs: i64,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct AppStat {
+    pub app_name: String,
+    pub duration_secs: i64,
+    pub classification: String,
+    pub percentage: f64,
+}
+
 fn unix_to_iso(unix: i64) -> String {
     session_svc::unix_to_iso(unix)
 }
@@ -187,6 +203,137 @@ pub async fn discard_incomplete_session(
         state.db_pool.clone()
     };
     session_svc::archive_session_record(&pool, &session_id)
+}
+
+#[tauri::command]
+pub async fn get_focus_stats(
+    session_id: String,
+    state: State<'_, Mutex<AppState>>,
+) -> Result<FocusStats, AppError> {
+    let pool = {
+        let state = state.lock().map_err(|e| AppError::Internal(e.to_string()))?;
+        state.db_pool.clone()
+    };
+    let conn = pool.get().map_err(AppError::from)?;
+
+    let started_at: i64 = conn
+        .query_row(
+            "SELECT started_at FROM sessions WHERE id = ?1",
+            rusqlite::params![session_id],
+            |r| r.get(0),
+        )
+        .map_err(AppError::from)?;
+
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as i64;
+    let total_secs = (now - started_at).max(0);
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT classification, COALESCE(SUM(duration_secs), 0)
+             FROM activities WHERE session_id = ?1
+             GROUP BY classification",
+        )
+        .map_err(AppError::from)?;
+
+    let mut focus_secs = 0i64;
+    let mut neutral_secs = 0i64;
+    let mut distraction_secs = 0i64;
+
+    let rows = stmt
+        .query_map(rusqlite::params![session_id], |r| {
+            Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?))
+        })
+        .map_err(AppError::from)?;
+
+    for row in rows {
+        let (cls, secs) = row.map_err(AppError::from)?;
+        match cls.as_str() {
+            "Focus" => focus_secs = secs,
+            "Neutral" => neutral_secs = secs,
+            "Distraction" => distraction_secs = secs,
+            _ => {}
+        }
+    }
+
+    Ok(FocusStats { total_secs, focus_secs, neutral_secs, distraction_secs })
+}
+
+#[tauri::command]
+pub async fn get_top_apps(
+    session_id: String,
+    state: State<'_, Mutex<AppState>>,
+) -> Result<Vec<AppStat>, AppError> {
+    let pool = {
+        let state = state.lock().map_err(|e| AppError::Internal(e.to_string()))?;
+        state.db_pool.clone()
+    };
+    let conn = pool.get().map_err(AppError::from)?;
+
+    let total_secs: i64 = conn
+        .query_row(
+            "SELECT COALESCE(SUM(duration_secs), 0) FROM activities WHERE session_id = ?1",
+            rusqlite::params![session_id],
+            |r| r.get(0),
+        )
+        .map_err(AppError::from)?;
+
+    if total_secs == 0 {
+        return Ok(vec![]);
+    }
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT app_name,
+                    SUM(duration_secs) as total,
+                    (SELECT classification FROM activities a2
+                     WHERE a2.app_name = a.app_name AND a2.session_id = ?1
+                     ORDER BY started_at DESC LIMIT 1) as cls
+             FROM activities a
+             WHERE session_id = ?1
+             GROUP BY app_name
+             ORDER BY total DESC
+             LIMIT 10",
+        )
+        .map_err(AppError::from)?;
+
+    let rows = stmt
+        .query_map(rusqlite::params![session_id], |r| {
+            Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?, r.get::<_, String>(2)?))
+        })
+        .map_err(AppError::from)?;
+
+    let mut result = Vec::new();
+    for row in rows {
+        let (app_name, duration, cls) = row.map_err(AppError::from)?;
+        result.push(AppStat {
+            app_name,
+            duration_secs: duration,
+            classification: cls,
+            percentage: (duration as f64 / total_secs as f64) * 100.0,
+        });
+    }
+    Ok(result)
+}
+
+#[tauri::command]
+pub async fn get_current_app() -> Result<Option<String>, AppError> {
+    #[cfg(target_os = "macos")]
+    {
+        use objc2_app_kit::NSWorkspace;
+        let name = unsafe {
+            let workspace = NSWorkspace::sharedWorkspace();
+            workspace
+                .frontmostApplication()
+                .and_then(|a| a.localizedName())
+                .map(|s| s.to_string())
+        };
+        return Ok(name);
+    }
+    #[cfg(not(target_os = "macos"))]
+    Ok(None)
 }
 
 #[tauri::command]

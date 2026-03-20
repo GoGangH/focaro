@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { Session } from "../types/bindings";
+import type { Session, FocusStats, AppStat } from "../types/bindings";
 
 export async function startSession(): Promise<Session> {
   return invoke<Session>("start_session");
@@ -27,4 +27,16 @@ export async function discardIncompleteSession(sessionId: string): Promise<void>
 
 export async function openDashboard(): Promise<void> {
   return invoke<void>("open_dashboard");
+}
+
+export async function getFocusStats(sessionId: string): Promise<FocusStats> {
+  return invoke<FocusStats>("get_focus_stats", { sessionId });
+}
+
+export async function getTopApps(sessionId: string): Promise<AppStat[]> {
+  return invoke<AppStat[]>("get_top_apps", { sessionId });
+}
+
+export async function getCurrentApp(): Promise<string | null> {
+  return invoke<string | null>("get_current_app");
 }
