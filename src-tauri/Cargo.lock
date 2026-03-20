@@ -851,6 +851,7 @@ dependencies = [
  "tauri-build",
  "tauri-specta",
  "thiserror 1.0.69",
+ "tokio",
  "uuid",
 ]
 

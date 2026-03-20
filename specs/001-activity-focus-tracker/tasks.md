@@ -53,23 +53,23 @@
 
 > **반드시 구현 전 실패 확인 필수**
 
-- [ ] T014 [P] [US1] `src-tauri/src/services/classifier.rs` 내 `#[cfg(test)]` 블록 작성: `github.com → Focus`, `youtube.com → Distraction`, 미등록 도메인 → `Neutral`, `None` 도메인 → `Neutral` 테스트
-- [ ] T015 [P] [US1] `src-tauri/tests/session_commands_tests.rs` 작성: `tauri::test::mock_builder` 사용, `start_session` → Session 반환, `end_session` → `NoActiveSession` 에러(세션 없을 때), `start_session` 중복 → `SessionAlreadyActive` 에러 테스트
-- [ ] T016 [P] [US1] `src/__tests__/hooks/useSession.test.ts` 작성: `mockIPC()` 사용, `startSession` 호출 시 상태 업데이트, `endSession` 호출 시 세션 초기화 테스트
+- [x] T014 [P] [US1] `src-tauri/src/services/classifier.rs` 내 `#[cfg(test)]` 블록 작성: `github.com → Focus`, `youtube.com → Distraction`, 미등록 도메인 → `Neutral`, `None` 도메인 → `Neutral` 테스트
+- [x] T015 [P] [US1] `src-tauri/tests/session_commands_tests.rs` 작성: `tauri::test::mock_builder` 사용, `start_session` → Session 반환, `end_session` → `NoActiveSession` 에러(세션 없을 때), `start_session` 중복 → `SessionAlreadyActive` 에러 테스트
+- [x] T016 [P] [US1] `src/__tests__/hooks/useSession.test.ts` 작성: `mockIPC()` 사용, `startSession` 호출 시 상태 업데이트, `endSession` 호출 시 세션 초기화 테스트
 
 ### 구현 (Green)
 
-- [ ] T017 [P] [US1] `src-tauri/src/services/classifier.rs` 구현: `classify(domain: Option<&str>) -> Classification` 함수, DB에서 규칙 조회하여 매칭, 없으면 `Neutral` 반환
-- [ ] T018 [P] [US1] `src-tauri/src/services/browser.rs` 구현: `get_browser_url(app_name: &str) -> Option<String>` 함수, `std::process::Command`로 `osascript` 실행, Chrome/Safari 각각 AppleScript, 500ms 타임아웃, 권한 거부 시 `None` 반환
-- [ ] T019 [US1] `src-tauri/src/services/tracker.rs` 구현: `start_tracker(app_handle, db_pool)` → `JoinHandle` 반환, 2초 폴링 루프, `NSWorkspace.frontmostApplication` 호출 (`objc2`), 활동 변경 감지, duration 계산 및 DB 저장 (T017, T018 의존)
-- [ ] T020 [US1] `src-tauri/src/commands/session.rs` 구현: `start_session`, `end_session`, `get_current_session`, `get_incomplete_session`, `resume_session`, `discard_incomplete_session` 커맨드 (T019 의존)
-- [ ] T021 [US1] `src-tauri/src/lib.rs` 트레이 설정 추가: `TrayIconBuilder`로 트레이 생성, `tray.set_title()` 2초마다 업데이트 (타이머 + Focus %), 세션 없을 때 아이콘만 표시 (T020 의존)
-- [ ] T022 [P] [US1] `src/services/session.ts` 작성: `invoke()` 래퍼 함수 (`startSession`, `endSession`, `getCurrentSession`, `getIncompleteSession`, `resumeSession`, `discardIncompleteSession`)
-- [ ] T023 [P] [US1] `src/hooks/useSession.ts` 작성: `useSession()` 커스텀 훅 — 세션 상태 구독, `startSession`/`endSession` 액션
-- [ ] T024 [US1] `src/components/Dropdown/SessionControls.tsx` 작성: "세션 시작" / "세션 종료" 버튼, `useSession` 훅 사용, Props 타입 명시 (`any` 금지)
-- [ ] T025 [US1] `src/components/Dropdown/SessionTimer.tsx` 작성: `started_at` 기반 경과 시간 실시간 표시 컴포넌트
-- [ ] T026 [US1] `src/pages/Dropdown.tsx` 기본 레이아웃 작성: `SessionTimer`, `SessionControls` 조합, 세션 없을 때 "시작" 버튼만 표시 (T024, T025 의존)
-- [ ] T027 [US1] 앱 시작 시 미완료 세션 복구 팝업 구현: `get_incomplete_session` 호출 후 "이전 세션을 이어할까요?" UI 표시 (`src/pages/Dropdown.tsx`에서 처리)
+- [x] T017 [P] [US1] `src-tauri/src/services/classifier.rs` 구현: `classify(domain: Option<&str>) -> Classification` 함수, DB에서 규칙 조회하여 매칭, 없으면 `Neutral` 반환
+- [x] T018 [P] [US1] `src-tauri/src/services/browser.rs` 구현: `get_browser_url(app_name: &str) -> Option<String>` 함수, `std::process::Command`로 `osascript` 실행, Chrome/Safari 각각 AppleScript, 500ms 타임아웃, 권한 거부 시 `None` 반환
+- [x] T019 [US1] `src-tauri/src/services/tracker.rs` 구현: `start_tracker(app_handle, db_pool)` → `JoinHandle` 반환, 2초 폴링 루프, `NSWorkspace.frontmostApplication` 호출 (`objc2`), 활동 변경 감지, duration 계산 및 DB 저장 (T017, T018 의존)
+- [x] T020 [US1] `src-tauri/src/commands/session.rs` 구현: `start_session`, `end_session`, `get_current_session`, `get_incomplete_session`, `resume_session`, `discard_incomplete_session` 커맨드 (T019 의존)
+- [x] T021 [US1] `src-tauri/src/lib.rs` 트레이 설정 추가: `TrayIconBuilder`로 트레이 생성, `tray.set_title()` 2초마다 업데이트 (타이머 + Focus %), 세션 없을 때 아이콘만 표시 (T020 의존)
+- [x] T022 [P] [US1] `src/services/session.ts` 작성: `invoke()` 래퍼 함수 (`startSession`, `endSession`, `getCurrentSession`, `getIncompleteSession`, `resumeSession`, `discardIncompleteSession`)
+- [x] T023 [P] [US1] `src/hooks/useSession.ts` 작성: `useSession()` 커스텀 훅 — 세션 상태 구독, `startSession`/`endSession` 액션
+- [x] T024 [US1] `src/components/Dropdown/SessionControls.tsx` 작성: "세션 시작" / "세션 종료" 버튼, `useSession` 훅 사용, Props 타입 명시 (`any` 금지)
+- [x] T025 [US1] `src/components/Dropdown/SessionTimer.tsx` 작성: `started_at` 기반 경과 시간 실시간 표시 컴포넌트
+- [x] T026 [US1] `src/pages/Dropdown.tsx` 기본 레이아웃 작성: `SessionTimer`, `SessionControls` 조합, 세션 없을 때 "시작" 버튼만 표시 (T024, T025 의존)
+- [x] T027 [US1] 앱 시작 시 미완료 세션 복구 팝업 구현: `get_incomplete_session` 호출 후 "이전 세션을 이어할까요?" UI 표시 (`src/pages/Dropdown.tsx`에서 처리)
 
 **체크포인트**: `cargo test` 통과, 메뉴바에 타이머 표시됨, 세션 시작/종료 동작 확인
 
