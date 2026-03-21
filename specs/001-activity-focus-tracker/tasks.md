@@ -174,26 +174,55 @@
 
 ---
 
-## Phase 8: 설정 및 크래시 복구
+## Phase 8: US6 — 설정 및 Reference 팝업 (Priority: P6)
 
-**목표**: 사용자 설정 (보관 기간), 앱 시작 시 미완료 세션 처리
+**목표**: Reference 저장 별도 팝업 창, 전역 단축키(`⌘⇧R`), 설정 창 (단축키/보관기간/분류규칙/자동실행)
+**독립 테스트**: 설정에서 분류 규칙 추가 → 이후 활동에 즉시 반영됨, `⌘⇧R` 팝업 열림 확인
 
-- [ ] T062 [P] `src-tauri/src/commands/settings.rs` 구현: `get_settings()`, `update_settings(settings: AppSettings)` 커맨드
-- [ ] T063 [P] `src/services/settings.ts` 작성: `getSettings()`, `updateSettings(settings)` invoke 래퍼
-- [ ] T064 `src-tauri/src/lib.rs` 업데이트: 앱 시작 시 `archive_old_data()` 호출 (설정된 보관 기간 기준), 이후 `get_incomplete_session()` 확인
-- [ ] T065 `src/pages/Dropdown.tsx` 업데이트: 앱 초기화 시 `getIncompleteSession()` 호출, 미완료 세션 있으면 "이전 세션을 이어할까요?" 확인 다이얼로그 표시
+### 테스트 먼저 작성 (Red) ⚠️
+
+- [ ] T062a [P] [US6] `src-tauri/src/commands/settings.rs` 신규 테스트: `get_settings`, `update_settings`, `get_classification_rules`, `add_classification_rule`, `delete_classification_rule` — 단위 테스트 5개
+- [ ] T062b [P] [US6] `src/__tests__/pages/Settings.test.tsx` 작성: 단축키 변경, 보관 기간 선택, 규칙 추가/삭제 렌더링 테스트 (mockIPC)
+- [ ] T062c [P] [US6] `src/__tests__/pages/SaveReference.test.tsx` 작성 (팝업 창 버전): 폼 렌더링, URL 자동채움, 제목 없이 저장 불가, 저장 후 창 닫힘 테스트
+
+### 구현 (Green)
+
+- [ ] T063 [US6] `src-tauri/migrations/V3__shortcut.sql` 작성: `settings` 테이블에 `shortcut_save_ref TEXT DEFAULT 'CmdOrCtrl+Shift+R'` 컬럼 추가 (마이그레이션)
+- [ ] T064 [P] [US6] `src-tauri/src/commands/settings.rs` 구현: `get_settings()`, `update_settings(settings)`, `get_classification_rules()`, `add_classification_rule(domain, classification)`, `delete_classification_rule(id)` 커맨드
+- [ ] T065 [P] [US6] `src-tauri/src/services/shortcut.rs` 구현: `register_shortcut(app, shortcut_str)` — `tauri-plugin-global-shortcut`로 `⌘⇧R` 기본 등록, 설정 변경 시 재등록
+- [ ] T066 [P] [US6] `src/services/settings.ts` 작성: `getSettings()`, `updateSettings(settings)`, `getClassificationRules()`, `addClassificationRule(domain, classification)`, `deleteClassificationRule(id)` invoke 래퍼
+- [ ] T067 [P] [US6] `src-tauri/tauri.conf.json` 업데이트: `save-reference` 창 추가 (`width: 480, height: 300, decorations: true, visible: false`), `settings` 창 추가 (`width: 600, height: 500, decorations: true, visible: false`)
+- [ ] T068 [US6] `src-tauri/src/commands/settings.rs`에 `open_save_reference_window`, `open_settings_window` 커맨드 추가; `src-tauri/src/lib.rs`에 트레이 우클릭 메뉴 "설정 열기" 항목 연결
+- [ ] T069 [P] [US6] `src/pages/SaveReference.tsx` 구현 (팝업 창 전용): URL 자동채움 (쿼리 파라미터로 전달), 제목 입력, 태그 입력, 저장 후 창 닫힘 (`getCurrentWindow().close()`)
+- [ ] T070 [P] [US6] `src/components/Settings/ShortcutSettings.tsx` 구현: 현재 단축키 표시, 새 단축키 입력(키 캡처), 저장 시 `updateSettings()` 호출
+- [ ] T071 [P] [US6] `src/components/Settings/RetentionSettings.tsx` 구현: 7일/30일/90일/무제한 라디오 선택, 저장
+- [ ] T072 [P] [US6] `src/components/Settings/RulesSettings.tsx` 구현: 규칙 목록 표시, 도메인+분류 추가 폼, 규칙 삭제 버튼 (즉시 반영)
+- [ ] T073 [P] [US6] `src/components/Settings/AutoLaunchSettings.tsx` 구현: 자동 실행 토글 (macOS `loginItems` API)
+- [ ] T074 [US6] `src/pages/Settings.tsx` 구현: 탭 또는 섹션으로 ShortcutSettings, RetentionSettings, RulesSettings, AutoLaunchSettings 통합
+- [ ] T075 [US6] `src/pages/Dropdown.tsx` 업데이트: "Reference 저장" 버튼 클릭 시 인라인 폼 대신 `openSaveReferenceWindow()` 호출로 변경
+
+**체크포인트**: `cargo test`, `npm test` 통과, `⌘⇧R` 단축키로 팝업 열림, 설정 창에서 규칙 추가 후 분류 즉시 반영
 
 ---
 
-## Phase 9: 마무리 및 권한 처리
+## Phase 9: 아카이빙 및 크래시 복구
+
+**목표**: 보관 기간 초과 데이터 자동 아카이빙, 앱 시작 시 미완료 세션 처리
+
+- [ ] T076 `src-tauri/src/lib.rs` 업데이트: 앱 시작 시 `archive_old_data()` 호출 (설정된 보관 기간 기준), 이후 `get_incomplete_session()` 확인
+- [ ] T077 `src/pages/Dropdown.tsx` 확인: 앱 초기화 시 `getIncompleteSession()` 호출, 미완료 세션 있으면 "이전 세션을 이어할까요?" 확인 다이얼로그 표시 (이미 T065에서 구현됨)
+
+---
+
+## Phase 10: 마무리 및 권한 처리
 
 **목적**: 권한 오류 처리, 전체 테스트 검증, quickstart.md 기준 검증
 
-- [ ] T066 [P] Accessibility 권한 없을 때 트래커 중단 및 사용자 안내 UI 추가 (`src-tauri/src/services/tracker.rs`, `src/pages/Dropdown.tsx`)
-- [ ] T067 [P] Automation 권한 거부 시 `url = null` 처리 확인 및 에러 로그 추가 (`src-tauri/src/services/browser.rs`)
-- [ ] T068 [P] `cargo test --all` 전체 Rust 테스트 실행 및 미통과 테스트 수정
-- [ ] T069 [P] `npm test` 전체 React 테스트 실행 및 미통과 테스트 수정
-- [ ] T070 `specs/001-activity-focus-tracker/quickstart.md` 검증 체크리스트 기준으로 실제 앱 동작 확인
+- [ ] T078 [P] Accessibility 권한 없을 때 트래커 중단 및 사용자 안내 UI 추가 (`src-tauri/src/services/tracker.rs`, `src/pages/Dropdown.tsx`)
+- [ ] T079 [P] Automation 권한 거부 시 `url = null` 처리 확인 및 에러 로그 추가 (`src-tauri/src/services/browser.rs`)
+- [ ] T080 [P] `cargo test --all` 전체 Rust 테스트 실행 및 미통과 테스트 수정
+- [ ] T081 [P] `npm test` 전체 React 테스트 실행 및 미통과 테스트 수정
+- [ ] T082 `specs/001-activity-focus-tracker/quickstart.md` 검증 체크리스트 기준으로 실제 앱 동작 확인
 
 ---
 
@@ -208,8 +237,9 @@
 - **Phase 5 (US3)**: Phase 3 완료 후 시작 (분류 서비스 필요) — Phase 4와 병렬 가능
 - **Phase 6 (US4)**: Phase 3 완료 후 시작 — Phase 4/5와 병렬 가능
 - **Phase 7 (US5)**: Phase 3, 5 완료 후 시작 (아카이빙은 메트릭 의존)
-- **Phase 8 (설정)**: Phase 3 완료 후 시작 — 대부분 Phase와 병렬 가능
-- **Phase 9 (마무리)**: 모든 Phase 완료 후
+- **Phase 8 (US6 설정)**: Phase 3, 6 완료 후 시작 — Reference 팝업, 전역 단축키, 설정 창
+- **Phase 9 (아카이빙/크래시복구)**: Phase 7, 8 완료 후 시작
+- **Phase 10 (마무리)**: 모든 Phase 완료 후
 
 ### 유저 스토리 의존성
 
