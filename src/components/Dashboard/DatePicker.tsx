@@ -53,8 +53,8 @@ export function DatePicker({ value, max, onChange }: Props) {
   const calcPos = useCallback(() => {
     if (!triggerRef.current) return;
     const r = triggerRef.current.getBoundingClientRect();
-    // 트리거 오른쪽 끝 기준 우측 정렬, 뷰포트 밖으로 나가지 않도록 클램프
-    const left = Math.max(8, Math.min(r.right - POPUP_W, window.innerWidth - POPUP_W - 8));
+    // 대시보드 헤더 우측 패딩(24px)에 맞춰 팝업 오른쪽 끝 고정
+    const left = window.innerWidth - POPUP_W - 24;
     setPos({ top: r.bottom + 6, left });
   }, []);
 
