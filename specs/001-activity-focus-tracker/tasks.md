@@ -155,20 +155,20 @@
 
 ### 테스트 먼저 작성 (Red) ⚠️
 
-- [ ] T051 [P] [US5] `src-tauri/tests/metrics_tests.rs` 추가: `get_activity_timeline`, `get_top_sites` 커맨드 테스트 — 날짜별 필터링, 보관 기간 초과 시 ArchivedDailySummary 반환
-- [ ] T052 [P] [US5] `src/__tests__/components/ActivityTimeline.test.tsx` 작성: `mockIPC()` 사용, 활동 목록 시간순 렌더링, 빈 상태 렌더링 테스트
-- [ ] T053 [P] [US5] `src/__tests__/components/TopSites.test.tsx` 작성: 도메인 사용 시간 내림차순 정렬 렌더링 테스트
+- [x] T051 [P] [US5] `src-tauri/tests/activity_tests.rs` 신규 작성: `query_activity_timeline`, `query_top_sites`, `query_daily_focus_stats` 서비스 테스트 12개 (날짜별 필터링, 도메인 집계, 정렬, limit 적용)
+- [x] T052 [P] [US5] `src/__tests__/components/Dashboard/ActivityTimeline.test.tsx` 작성: 활동 목록 렌더링, 빈 상태, 도메인 표시, timeline-dot, duration 포맷 테스트 (5개)
+- [x] T053 [P] [US5] `src/__tests__/components/Dashboard/TopSites.test.tsx` 작성: 도메인 목록, 빈 상태, 시간 포맷, site-dot, site-bar 테스트 (5개)
 
 ### 구현 (Green)
 
-- [ ] T054 [P] [US5] `src-tauri/src/services/archive.rs` 구현: `archive_old_data(db, retention_days)` — 보관 기간 초과 날짜의 Activity를 `ArchivedDailySummary`로 집계 후 원본 삭제
-- [ ] T055 [P] [US5] `src-tauri/src/commands/activity.rs` 업데이트: `get_activity_timeline(date: String)`, `get_top_sites(date: String, limit: u32)` 커맨드 추가 — 보관 기간 내외 분기 처리
-- [ ] T056 [P] [US5] `src/components/Dashboard/ActivityTimeline.tsx` 구현: 활동 목록 시간순 표시, Classification별 색상 구분
-- [ ] T057 [P] [US5] `src/components/Dashboard/TopSites.tsx` 구현: 도메인별 누적 시간 바 차트 (사용 시간 기준 정렬)
-- [ ] T058 [P] [US5] `src/components/Dashboard/FocusScore.tsx` 구현: Focus % 요약 표시, 날짜 필터 컨트롤
-- [ ] T059 [P] [US5] `src/components/Dashboard/SavedReferences.tsx` 구현: `Reference[]` 목록 표시, URL 클릭 시 브라우저 열기
-- [ ] T060 [US5] `src/pages/Dashboard.tsx` 작성: 모든 Dashboard 컴포넌트 통합, 날짜 필터 상태 관리 (T056~T059 의존)
-- [ ] T061 [US5] Dashboard 창 열기 연결: `src-tauri/src/commands/session.rs`에 `open_dashboard` 커맨드 추가, `src/components/Dropdown/SessionControls.tsx`에 "Dashboard 열기" 버튼 추가
+- [x] T054 [P] [US5] `src-tauri/src/services/archive.rs` 구현: `archive_old_data(pool, retention_days)` — 보관 기간 초과 날짜 Activity를 ArchivedDailySummary로 집계 후 원본 삭제
+- [x] T055 [P] [US5] `src-tauri/src/services/activity.rs` + `commands/activity.rs` 신규: `get_activity_timeline`, `get_top_sites`, `get_daily_focus_stats` 커맨드 + `open_url` 추가
+- [x] T056 [P] [US5] `src/components/Dashboard/ActivityTimeline.tsx` 구현: 활동 목록 시간순, Classification 색상 dot, duration/domain 표시
+- [x] T057 [P] [US5] `src/components/Dashboard/TopSites.tsx` 구현: 도메인별 바 차트 (최장 기준 비율), 색상 구분
+- [x] T058 [P] [US5] `src/components/Dashboard/FocusScore.tsx` 구현: Focus % 큰 숫자 + 3개 카테고리 바 + 총 시간
+- [x] T059 [P] [US5] `src/components/Dashboard/SavedReferences.tsx` 구현: Reference 목록, URL 클릭 시 `open_url` 커맨드로 브라우저 열기
+- [x] T060 [US5] `src/pages/Dashboard.tsx` 완전 재구현: 탭(타임라인/TopSites/FocusScore/References) + 날짜 필터 + 데이터 로드
+- [x] T061 [US5] `open_dashboard` 커맨드 기존 구현 확인 (T031에서 완료), `src/services/activity.ts` 신규 invoke 래퍼 추가
 
 **체크포인트**: `cargo test`, `npm test` 통과, Dashboard 열리고 날짜 필터 동작 확인
 

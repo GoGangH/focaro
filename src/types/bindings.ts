@@ -20,7 +20,7 @@ export interface Activity {
   domain: string | null;
   classification: Classification;
   started_at: string;
-  duration_secs: number;
+  duration_secs: number | null;
 }
 
 export interface FocusStats {

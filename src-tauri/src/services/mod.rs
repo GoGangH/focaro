@@ -1,3 +1,5 @@
+pub mod activity;
+pub mod archive;
 pub mod browser;
 pub mod classifier;
 pub mod db;

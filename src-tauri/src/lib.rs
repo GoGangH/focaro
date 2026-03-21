@@ -122,6 +122,10 @@ pub fn run() {
             commands::session::get_current_url,
             commands::reference::save_reference,
             commands::reference::get_references,
+            commands::activity::get_activity_timeline,
+            commands::activity::get_top_sites,
+            commands::activity::get_daily_focus_stats,
+            commands::session::open_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

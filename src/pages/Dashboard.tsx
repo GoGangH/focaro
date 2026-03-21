@@ -1,8 +1,93 @@
+import { useState, useEffect, useCallback } from "react";
+import type { Activity, DomainSummary, FocusMetrics, Reference } from "../types/bindings";
+import { getActivityTimeline, getTopSites, getDailyFocusStats } from "../services/activity";
+import { getReferences } from "../services/reference";
+import { ActivityTimeline } from "../components/Dashboard/ActivityTimeline";
+import { TopSites } from "../components/Dashboard/TopSites";
+import { FocusScore } from "../components/Dashboard/FocusScore";
+import { SavedReferences } from "../components/Dashboard/SavedReferences";
+
+function todayDateStr(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+type Tab = "timeline" | "sites" | "score" | "refs";
+
 export function Dashboard() {
+  const [date, setDate] = useState(todayDateStr);
+  const [tab, setTab] = useState<Tab>("timeline");
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [sites, setSites] = useState<DomainSummary[]>([]);
+  const [metrics, setMetrics] = useState<FocusMetrics | null>(null);
+  const [refs, setRefs] = useState<Reference[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadData = useCallback(async (d: string) => {
+    setLoading(true);
+    try {
+      const [acts, topSites, focusStats, references] = await Promise.all([
+        getActivityTimeline(d),
+        getTopSites(d, 20),
+        getDailyFocusStats(d),
+        getReferences(),
+      ]);
+      setActivities(acts);
+      setSites(topSites);
+      setMetrics(focusStats);
+      setRefs(references);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData(date);
+  }, [date, loadData]);
+
+  const TABS: { id: Tab; label: string }[] = [
+    { id: "timeline", label: "타임라인" },
+    { id: "sites", label: "Top Sites" },
+    { id: "score", label: "Focus Score" },
+    { id: "refs", label: "References" },
+  ];
+
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Dashboard</h1>
-      <p>준비 중입니다.</p>
+    <div className="dashboard">
+      <div className="dash-header">
+        <h1 className="dash-title">Dashboard</h1>
+        <input
+          type="date"
+          className="dash-date-input"
+          value={date}
+          max={todayDateStr()}
+          onChange={(e) => setDate(e.target.value)}
+        />
+      </div>
+
+      <div className="dash-tabs">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={`dash-tab${tab === t.id ? " dash-tab--active" : ""}`}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="dash-content">
+        {loading ? (
+          <p className="dash-loading">로딩 중...</p>
+        ) : (
+          <>
+            {tab === "timeline" && <ActivityTimeline activities={activities} />}
+            {tab === "sites" && <TopSites sites={sites} />}
+            {tab === "score" && <FocusScore metrics={metrics} />}
+            {tab === "refs" && <SavedReferences references={refs} />}
+          </>
+        )}
+      </div>
     </div>
   );
 }
