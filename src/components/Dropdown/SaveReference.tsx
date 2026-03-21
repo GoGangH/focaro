@@ -88,10 +88,9 @@ export function SaveReference({ currentUrl, onSaved }: SaveReferenceProps) {
 
   return (
     <button
-      className="dashboard-btn"
+      className={`dashboard-btn${currentUrl ? " dashboard-btn--active" : ""}`}
       onClick={handleOpen}
       disabled={!currentUrl}
-      style={{ opacity: currentUrl ? 1 : 0.4 }}
     >
       Reference 저장
     </button>
