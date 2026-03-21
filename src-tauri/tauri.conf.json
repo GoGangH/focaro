@@ -31,6 +31,24 @@
         "height": 650,
         "visible": false,
         "resizable": true
+      },
+      {
+        "label": "save-reference",
+        "title": "Reference 저장",
+        "width": 480,
+        "height": 280,
+        "visible": false,
+        "resizable": false,
+        "decorations": true
+      },
+      {
+        "label": "settings",
+        "title": "focaro 설정",
+        "width": 600,
+        "height": 500,
+        "visible": false,
+        "resizable": false,
+        "decorations": true
       }
     ],
     "security": {

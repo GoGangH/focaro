@@ -94,8 +94,9 @@ mod tests {
 
         let rows = activity::query_activity_timeline(&pool, &date).unwrap();
         assert_eq!(rows.len(), 2, "날짜에 맞는 활동 2개");
-        assert_eq!(rows[0].app_name, "Chrome");
-        assert_eq!(rows[1].app_name, "Slack");
+        // DESC 정렬: 최신 활동이 먼저
+        assert_eq!(rows[0].app_name, "Slack");
+        assert_eq!(rows[1].app_name, "Chrome");
     }
 
     #[test]
@@ -109,8 +110,9 @@ mod tests {
         insert_activity_with_domain(&pool, "s1", "Chrome", Some("github.com"), "Focus", 60, ts);
 
         let rows = activity::query_activity_timeline(&pool, &date).unwrap();
-        assert_eq!(rows[0].app_name, "Chrome", "시간순 정렬: Chrome이 먼저");
-        assert_eq!(rows[1].app_name, "Slack");
+        // DESC 정렬: 최신(Slack, ts+120)이 먼저
+        assert_eq!(rows[0].app_name, "Slack", "DESC 정렬: Slack이 먼저");
+        assert_eq!(rows[1].app_name, "Chrome");
     }
 
     #[test]
