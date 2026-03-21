@@ -11,6 +11,21 @@ function todayDateStr(): string {
   return new Date().toISOString().split("T")[0];
 }
 
+function shiftDate(dateStr: string, days: number): string {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0];
+}
+
+function formatDateLabel(dateStr: string): string {
+  const today = todayDateStr();
+  const yesterday = shiftDate(today, -1);
+  if (dateStr === today) return "오늘";
+  if (dateStr === yesterday) return "어제";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" });
+}
+
 type Tab = "timeline" | "sites" | "score" | "refs";
 
 export function Dashboard() {
@@ -58,13 +73,24 @@ export function Dashboard() {
     <div className="dashboard">
       <div className="dash-header">
         <h1 className="dash-title">Dashboard</h1>
-        <input
-          type="date"
-          className="dash-date-input"
-          value={date}
-          max={todayDateStr()}
-          onChange={(e) => setDate(e.target.value)}
-        />
+        <div className="dash-date-nav">
+          <button
+            className="dash-date-btn"
+            onClick={() => setDate((d) => shiftDate(d, -1))}
+            aria-label="이전 날"
+          >
+            ‹
+          </button>
+          <span className="dash-date-label">{formatDateLabel(date)}</span>
+          <button
+            className="dash-date-btn"
+            onClick={() => setDate((d) => shiftDate(d, 1))}
+            disabled={date >= todayDateStr()}
+            aria-label="다음 날"
+          >
+            ›
+          </button>
+        </div>
       </div>
 
       <div className="dash-tabs">
