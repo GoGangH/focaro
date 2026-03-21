@@ -11,6 +11,7 @@ import {
   getTopApps,
   getCurrentApp,
   getCurrentUrl,
+  checkAccessibilityPermission,
 } from "../services/session";
 import { DonutChart } from "../components/Dropdown/DonutChart";
 import { openSaveReferenceWindow, openSettingsWindow } from "../services/settings";
@@ -38,12 +39,14 @@ export function Dropdown() {
   const [currentApp, setCurrentApp] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
+  const [accessibilityGranted, setAccessibilityGranted] = useState(true);
 
-  // Recovery check on mount
+  // Recovery + 권한 체크 on mount
   useEffect(() => {
     if (recoveryChecked) return;
     setRecoveryChecked(true);
     getIncompleteSession().then((s) => { if (s) setIncompleteSession(s); });
+    checkAccessibilityPermission().then((granted) => setAccessibilityGranted(granted));
   }, [recoveryChecked]);
 
   // Poll stats every 5s when session active
@@ -112,6 +115,14 @@ export function Dropdown() {
 
   return (
     <div className="dropdown">
+      {/* Accessibility 권한 없을 때 안내 배너 */}
+      {!accessibilityGranted && (
+        <div className="dd-permission-banner">
+          <span>⚠️</span>
+          <span>활동 추적을 위해 손쉬운 사용 권한이 필요합니다.</span>
+        </div>
+      )}
+
       {/* Header: timer + focus % */}
       <div className="dd-header">
         <div className="dd-timer">{session ? formatTimer(elapsed) : "--:--"}</div>
