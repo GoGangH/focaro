@@ -53,12 +53,8 @@ export function DatePicker({ value, max, onChange }: Props) {
   const calcPos = useCallback(() => {
     if (!triggerRef.current) return;
     const r = triggerRef.current.getBoundingClientRect();
-    const centerX = r.left + r.width / 2;
-    // 뷰포트 오른쪽 넘침 방지
-    const left = Math.min(
-      Math.max(8, centerX - POPUP_W / 2),
-      window.innerWidth - POPUP_W - 8
-    );
+    // 트리거 오른쪽 끝 기준 우측 정렬, 뷰포트 밖으로 나가지 않도록 클램프
+    const left = Math.max(8, Math.min(r.right - POPUP_W, window.innerWidth - POPUP_W - 8));
     setPos({ top: r.bottom + 6, left });
   }, []);
 
