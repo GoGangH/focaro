@@ -57,6 +57,18 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             init_menubar_panel(app.handle(), &dropdown);
 
+            // 대시보드 창: X로 닫아도 파괴되지 않고 숨기기만 함
+            // → 재오픈 시 get_webview_window("dashboard")가 항상 Some을 반환
+            if let Some(dashboard) = app.get_webview_window("dashboard") {
+                let win = dashboard.clone();
+                dashboard.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        api.prevent_close();
+                        let _ = win.hide();
+                    }
+                });
+            }
+
             // 트레이 우클릭 메뉴
             let quit_item = MenuItem::with_id(app, "quit", "focaro 종료", true, None::<&str>)?;
             let tray_menu = Menu::with_items(app, &[&quit_item])?;
