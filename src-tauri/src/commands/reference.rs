@@ -2,7 +2,7 @@ use std::sync::Mutex;
 use tauri::State;
 
 use crate::errors::AppError;
-use crate::models::reference::{Reference, SaveReferenceInput};
+use crate::models::reference::{Reference, SaveReferenceInput, UpdateReferenceInput};
 use crate::services::reference as reference_svc;
 use crate::state::app_state::AppState;
 
@@ -34,4 +34,28 @@ pub async fn get_references(
         state.db_pool.clone()
     };
     reference_svc::get_references(&pool, session_id.as_deref())
+}
+
+#[tauri::command]
+pub async fn delete_reference(
+    id: String,
+    state: State<'_, Mutex<AppState>>,
+) -> Result<(), AppError> {
+    let pool = {
+        let state = state.lock().map_err(|e| AppError::Internal(e.to_string()))?;
+        state.db_pool.clone()
+    };
+    reference_svc::delete_reference(&pool, &id)
+}
+
+#[tauri::command]
+pub async fn update_reference(
+    input: UpdateReferenceInput,
+    state: State<'_, Mutex<AppState>>,
+) -> Result<Reference, AppError> {
+    let pool = {
+        let state = state.lock().map_err(|e| AppError::Internal(e.to_string()))?;
+        state.db_pool.clone()
+    };
+    reference_svc::update_reference(&pool, &input.id, &input.title, input.tags)
 }

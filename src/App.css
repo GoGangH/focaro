@@ -543,6 +543,17 @@ body {
   padding: 12px;
 }
 
+.saved-ref-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.saved-ref-favicon {
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
 .saved-ref-title {
   background: transparent;
   border: none;
@@ -554,17 +565,52 @@ body {
   text-align: left;
   text-decoration: underline;
   text-underline-offset: 2px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .saved-ref-title:hover {
   color: #60a5fa;
 }
 
-.saved-ref-url {
-  font-size: 11px;
-  color: #636366;
+.saved-ref-controls {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.saved-ref-item:hover .saved-ref-controls {
+  opacity: 1;
+}
+
+.saved-ref-icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 13px;
+  line-height: 1;
+  border-radius: 4px;
+}
+
+.saved-ref-icon-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.saved-ref-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.saved-ref-actions {
+  display: flex;
+  gap: 6px;
   margin-top: 2px;
-  word-break: break-all;
 }
 
 .saved-ref-tags {

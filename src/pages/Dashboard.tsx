@@ -84,7 +84,12 @@ export function Dashboard() {
             {tab === "timeline" && <ActivityTimeline activities={activities} />}
             {tab === "sites" && <TopSites sites={sites} />}
             {tab === "score" && <FocusScore metrics={metrics} />}
-            {tab === "refs" && <SavedReferences references={refs} />}
+            {tab === "refs" && (
+              <SavedReferences
+                references={refs}
+                onRefresh={() => getReferences().then(setRefs)}
+              />
+            )}
           </>
         )}
       </div>

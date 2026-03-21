@@ -62,6 +62,12 @@ export interface Reference {
   created_at: string;
 }
 
+export interface UpdateReferenceInput {
+  id: string;
+  title: string;
+  tags: string[];
+}
+
 export interface AppSettings {
   retention_days: number;
 }

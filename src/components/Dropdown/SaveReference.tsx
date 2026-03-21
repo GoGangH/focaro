@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Reference } from "../../types/bindings";
-import { saveReference } from "../../services/reference";
+import { saveReference, getCurrentTitle } from "../../services/reference";
 
 interface SaveReferenceProps {
   currentUrl: string | null;
@@ -12,12 +12,21 @@ export function SaveReference({ currentUrl, onSaved }: SaveReferenceProps) {
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loadingTitle, setLoadingTitle] = useState(false);
 
-  const handleOpen = () => {
+  const handleOpen = async () => {
     if (!currentUrl) return;
-    setTitle("");
     setTags("");
     setOpen(true);
+    setLoadingTitle(true);
+    try {
+      const pageTitle = await getCurrentTitle();
+      setTitle(pageTitle ?? "");
+    } catch {
+      setTitle("");
+    } finally {
+      setLoadingTitle(false);
+    }
   };
 
   const handleClose = () => {
@@ -48,16 +57,11 @@ export function SaveReference({ currentUrl, onSaved }: SaveReferenceProps) {
       <div className="save-ref-form">
         <input
           className="save-ref-form__input"
-          value={currentUrl ?? ""}
-          readOnly
-          style={{ color: "#636366", fontSize: 11 }}
-        />
-        <input
-          className="save-ref-form__input"
-          placeholder="제목 입력"
+          placeholder={loadingTitle ? "타이틀 불러오는 중..." : "제목 입력"}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          autoFocus
+          disabled={loadingTitle}
+          autoFocus={!loadingTitle}
         />
         <input
           className="save-ref-form__input"
@@ -70,7 +74,7 @@ export function SaveReference({ currentUrl, onSaved }: SaveReferenceProps) {
             className="session-btn session-btn--start"
             style={{ flex: 1, padding: "7px 0", fontSize: 13 }}
             onClick={handleSave}
-            disabled={saving || !title.trim()}
+            disabled={saving || loadingTitle || !title.trim()}
           >
             저장
           </button>

@@ -31,6 +31,37 @@ pub fn get_browser_url(app_name: &str) -> Option<String> {
     }
 }
 
+/// 현재 활성 브라우저 탭의 페이지 타이틀 반환.
+/// Automation 권한 없거나 실패 시 None 반환.
+pub fn get_browser_title(app_name: &str) -> Option<String> {
+    let script = match app_name {
+        "Google Chrome" => {
+            r#"tell application "Google Chrome" to get title of active tab of front window"#
+        }
+        "Safari" => {
+            r#"tell application "Safari" to get name of current tab of front window"#
+        }
+        _ => return None,
+    };
+
+    let output = Command::new("osascript")
+        .arg("-e")
+        .arg(script)
+        .output()
+        .ok()?;
+
+    if output.status.success() {
+        let title = String::from_utf8(output.stdout).ok()?.trim().to_string();
+        if title.is_empty() {
+            None
+        } else {
+            Some(title)
+        }
+    } else {
+        None
+    }
+}
+
 /// URL에서 도메인 추출 (scheme, path 제거)
 pub fn extract_domain(url: &str) -> Option<String> {
     let without_scheme = url

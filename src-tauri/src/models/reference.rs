@@ -17,6 +17,13 @@ pub struct SaveReferenceInput {
     pub tags: Option<Vec<String>>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateReferenceInput {
+    pub id: String,
+    pub title: String,
+    pub tags: Vec<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
