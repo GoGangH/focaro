@@ -119,6 +119,9 @@ pub fn run() {
             commands::session::get_focus_stats,
             commands::session::get_top_apps,
             commands::session::get_current_app,
+            commands::session::get_current_url,
+            commands::reference::save_reference,
+            commands::reference::get_references,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

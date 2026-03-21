@@ -40,3 +40,7 @@ export async function getTopApps(sessionId: string): Promise<AppStat[]> {
 export async function getCurrentApp(): Promise<string | null> {
   return invoke<string | null>("get_current_app");
 }
+
+export async function getCurrentUrl(): Promise<string | null> {
+  return invoke<string | null>("get_current_url");
+}

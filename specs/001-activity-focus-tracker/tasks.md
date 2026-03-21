@@ -133,15 +133,16 @@
 
 ### 테스트 먼저 작성 (Red) ⚠️
 
-- [ ] T045 [P] [US4] `src-tauri/tests/session_commands_tests.rs` 추가: `save_reference` 커맨드 테스트 — 세션 없을 때 `NoActiveSession` 에러, 정상 저장 시 `Reference` 반환
-- [ ] T046 [P] [US4] `src/__tests__/components/SaveReference.test.tsx` 작성: `mockIPC()` 사용, URL 자동 채워짐, 제목 입력 후 저장 버튼 동작 테스트
+- [x] T045 [P] [US4] `src-tauri/src/services/reference.rs` 신규: `save_reference`, `get_references` 서비스 + 단위 테스트 7개 (저장/태그/조회/정렬/격리)
+- [x] T046 [P] [US4] `src/__tests__/components/SaveReference.test.tsx`: mockIPC 기반 8개 테스트 (비활성, 폼 열림, URL 자동채움, 제목 없을 때, 저장, 폼 닫힘, 취소)
 
 ### 구현 (Green)
 
-- [ ] T047 [P] [US4] `src-tauri/src/commands/reference.rs` 구현: `save_reference(input: SaveReferenceInput)`, `get_references(session_id: Option<String>)` 커맨드
-- [ ] T048 [P] [US4] `src/services/reference.ts` 작성: `saveReference(input)`, `getReferences(sessionId?)` invoke 래퍼
-- [ ] T049 [US4] `src/components/Dropdown/SaveReference.tsx` 구현: "Reference 저장" 버튼, 클릭 시 현재 URL 자동 채워진 인라인 폼 표시, 제목 입력 필드, 태그 입력 (선택), 저장 버튼
-- [ ] T050 [US4] `src/pages/Dropdown.tsx` 업데이트: `SaveReference` 컴포넌트 통합, 브라우저 활동 중일 때만 버튼 활성화 (T049 의존)
+- [x] T047 [P] [US4] `src-tauri/src/commands/reference.rs` 구현: `save_reference` (NoActiveSession 가드), `get_references(session_id: Option<String>)` — services/reference.rs 위임
+- [x] T047a `src-tauri/src/commands/session.rs`: `get_current_url` 커맨드 추가 — 현재 앱이 Chrome/Safari일 때 URL 반환 (AppleScript)
+- [x] T048 [P] [US4] `src/services/reference.ts`: `saveReference`, `getReferences` invoke 래퍼; `src/services/session.ts`: `getCurrentUrl` 추가
+- [x] T049 [US4] `src/components/Dropdown/SaveReference.tsx` 구현: 버튼(URL 없으면 비활성), 인라인 폼(URL 읽기전용, 제목 입력, 태그 입력), 저장/취소 버튼
+- [x] T050 [US4] `src/pages/Dropdown.tsx` 업데이트: 세션 활성 중 `SaveReference` 통합, `getCurrentUrl` 5초 폴링으로 URL 갱신
 
 **체크포인트**: `cargo test`, `npm test` 통과, 브라우저 URL이 자동 채워지고 저장됨
 
