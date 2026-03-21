@@ -1086,3 +1086,17 @@ body {
 .dd-footer .dashboard-btn {
   flex: 1;
 }
+
+/* ── 권한 안내 배너 ────────────────────────────────────────────────────────── */
+
+.dd-permission-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(255, 159, 10, 0.15);
+  border-bottom: 1px solid rgba(255, 159, 10, 0.2);
+  font-size: 11px;
+  color: #ff9f0a;
+  line-height: 1.4;
+}

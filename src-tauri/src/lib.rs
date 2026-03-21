@@ -48,6 +48,24 @@ pub fn run() {
             let app_state = AppState::new(pool);
             app.manage(Mutex::new(app_state));
 
+            // 앱 시작 시 보관 기간 초과 데이터 아카이빙
+            {
+                let state = app.state::<Mutex<AppState>>();
+                let pool = state.lock().unwrap().db_pool.clone();
+                let retention_days = {
+                    let conn = pool.get().expect("DB 연결 실패");
+                    services::settings::get_settings(&conn)
+                        .map(|s| s.retention_days)
+                        .unwrap_or(30)
+                };
+                // retention_days=0은 무제한 (아카이빙 없음)
+                if retention_days > 0 {
+                    if let Err(e) = services::archive::archive_old_data(&pool, retention_days) {
+                        eprintln!("아카이빙 실패 (무시하고 계속): {e}");
+                    }
+                }
+            }
+
             // 메뉴바 전용 앱: 독 아이콘 숨김, 앱 활성화 없이 창 표시 가능
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
@@ -172,6 +190,7 @@ pub fn run() {
             commands::session::get_current_app,
             commands::session::get_current_url,
             commands::session::get_current_title,
+            commands::session::check_accessibility_permission,
             commands::reference::save_reference,
             commands::reference::get_references,
             commands::reference::delete_reference,

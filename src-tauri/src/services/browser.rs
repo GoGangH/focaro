@@ -27,6 +27,11 @@ pub fn get_browser_url(app_name: &str) -> Option<String> {
             Some(url)
         }
     } else {
+        // Automation 권한 거부 또는 브라우저 창 없음 → url=null로 처리
+        if !output.stderr.is_empty() {
+            let err = String::from_utf8_lossy(&output.stderr);
+            eprintln!("[browser] URL 조회 실패 (url=null): {}", err.trim());
+        }
         None
     }
 }

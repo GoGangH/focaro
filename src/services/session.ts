@@ -48,3 +48,7 @@ export async function getCurrentUrl(): Promise<string | null> {
 export async function getCurrentTitle(): Promise<string | null> {
   return invoke<string | null>("get_current_title");
 }
+
+export async function checkAccessibilityPermission(): Promise<boolean> {
+  return invoke<boolean>("check_accessibility_permission");
+}

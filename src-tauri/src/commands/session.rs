@@ -306,6 +306,22 @@ pub async fn get_current_title() -> Result<Option<String>, AppError> {
     Ok(None)
 }
 
+/// Accessibility 권한 여부 확인 (macOS 전용)
+/// 권한 없으면 프론트엔드에서 안내 배너 표시
+#[tauri::command]
+pub async fn check_accessibility_permission() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        #[link(name = "ApplicationServices", kind = "framework")]
+        extern "C" {
+            fn AXIsProcessTrusted() -> bool;
+        }
+        unsafe { AXIsProcessTrusted() }
+    }
+    #[cfg(not(target_os = "macos"))]
+    true
+}
+
 #[tauri::command]
 pub async fn open_dashboard(app_handle: AppHandle) -> Result<(), AppError> {
     use tauri::Manager;
