@@ -181,25 +181,25 @@
 
 ### 테스트 먼저 작성 (Red) ⚠️
 
-- [ ] T062a [P] [US6] `src-tauri/src/commands/settings.rs` 신규 테스트: `get_settings`, `update_settings`, `get_classification_rules`, `add_classification_rule`, `delete_classification_rule` — 단위 테스트 5개
-- [ ] T062b [P] [US6] `src/__tests__/pages/Settings.test.tsx` 작성: 단축키 변경, 보관 기간 선택, 규칙 추가/삭제 렌더링 테스트 (mockIPC)
-- [ ] T062c [P] [US6] `src/__tests__/pages/SaveReference.test.tsx` 작성 (팝업 창 버전): 폼 렌더링, URL 자동채움, 제목 없이 저장 불가, 저장 후 창 닫힘 테스트
+- [x] T062a [P] [US6] `src-tauri/src/commands/settings.rs` 신규 테스트: `get_settings`, `update_settings`, `get_classification_rules`, `add_classification_rule`, `delete_classification_rule` — 단위 테스트 5개
+- [x] T062b [P] [US6] `src/__tests__/pages/Settings.test.tsx` 작성: 단축키 변경, 보관 기간 선택, 규칙 추가/삭제 렌더링 테스트 (mockIPC)
+- [x] T062c [P] [US6] `src/__tests__/pages/SaveReference.test.tsx` 작성 (팝업 창 버전): 폼 렌더링, URL 자동채움, 제목 없이 저장 불가, 저장 후 창 닫힘 테스트
 
 ### 구현 (Green)
 
-- [ ] T063 [US6] `src-tauri/migrations/V3__shortcut.sql` 작성: `settings` 테이블에 `shortcut_save_ref TEXT DEFAULT 'CmdOrCtrl+Shift+R'` 컬럼 추가 (마이그레이션)
-- [ ] T064 [P] [US6] `src-tauri/src/commands/settings.rs` 구현: `get_settings()`, `update_settings(settings)`, `get_classification_rules()`, `add_classification_rule(domain, classification)`, `delete_classification_rule(id)` 커맨드
-- [ ] T065 [P] [US6] `src-tauri/src/services/shortcut.rs` 구현: `register_shortcut(app, shortcut_str)` — `tauri-plugin-global-shortcut`로 `⌘⇧R` 기본 등록, 설정 변경 시 재등록
-- [ ] T066 [P] [US6] `src/services/settings.ts` 작성: `getSettings()`, `updateSettings(settings)`, `getClassificationRules()`, `addClassificationRule(domain, classification)`, `deleteClassificationRule(id)` invoke 래퍼
-- [ ] T067 [P] [US6] `src-tauri/tauri.conf.json` 업데이트: `save-reference` 창 추가 (`width: 480, height: 300, decorations: true, visible: false`), `settings` 창 추가 (`width: 600, height: 500, decorations: true, visible: false`)
-- [ ] T068 [US6] `src-tauri/src/commands/settings.rs`에 `open_save_reference_window`, `open_settings_window` 커맨드 추가; `src-tauri/src/lib.rs`에 트레이 우클릭 메뉴 "설정 열기" 항목 연결
-- [ ] T069 [P] [US6] `src/pages/SaveReference.tsx` 구현 (팝업 창 전용): URL 자동채움 (쿼리 파라미터로 전달), 제목 입력, 태그 입력, 저장 후 창 닫힘 (`getCurrentWindow().close()`)
-- [ ] T070 [P] [US6] `src/components/Settings/ShortcutSettings.tsx` 구현: 현재 단축키 표시, 새 단축키 입력(키 캡처), 저장 시 `updateSettings()` 호출
-- [ ] T071 [P] [US6] `src/components/Settings/RetentionSettings.tsx` 구현: 7일/30일/90일/무제한 라디오 선택, 저장
-- [ ] T072 [P] [US6] `src/components/Settings/RulesSettings.tsx` 구현: 규칙 목록 표시, 도메인+분류 추가 폼, 규칙 삭제 버튼 (즉시 반영)
-- [ ] T073 [P] [US6] `src/components/Settings/AutoLaunchSettings.tsx` 구현: 자동 실행 토글 (macOS `loginItems` API)
-- [ ] T074 [US6] `src/pages/Settings.tsx` 구현: 탭 또는 섹션으로 ShortcutSettings, RetentionSettings, RulesSettings, AutoLaunchSettings 통합
-- [ ] T075 [US6] `src/pages/Dropdown.tsx` 업데이트: "Reference 저장" 버튼 클릭 시 인라인 폼 대신 `openSaveReferenceWindow()` 호출로 변경
+- [x] T063 [US6] `src-tauri/migrations/V3__shortcut.sql` 작성: `settings` 테이블에 `shortcut_save_ref TEXT DEFAULT 'CmdOrCtrl+Shift+R'` 컬럼 추가 (마이그레이션)
+- [x] T064 [P] [US6] `src-tauri/src/commands/settings.rs` 구현: `get_settings()`, `update_settings(settings)`, `get_classification_rules()`, `add_classification_rule(domain, classification)`, `delete_classification_rule(id)` 커맨드
+- [x] T065 [P] [US6] `src-tauri/src/services/shortcut.rs` 구현: `register_shortcut(app, shortcut_str)` — `tauri-plugin-global-shortcut`로 `⌘⇧R` 기본 등록, 설정 변경 시 재등록
+- [x] T066 [P] [US6] `src/services/settings.ts` 작성: `getSettings()`, `updateSettings(settings)`, `getClassificationRules()`, `addClassificationRule(domain, classification)`, `deleteClassificationRule(id)` invoke 래퍼
+- [x] T067 [P] [US6] `src-tauri/tauri.conf.json` 업데이트: `save-reference` 창 추가 (`width: 480, height: 300, decorations: true, visible: false`), `settings` 창 추가 (`width: 600, height: 500, decorations: true, visible: false`)
+- [x] T068 [US6] `src-tauri/src/commands/settings.rs`에 `open_save_reference_window`, `open_settings_window` 커맨드 추가; `src-tauri/src/lib.rs`에 트레이 우클릭 메뉴 "설정 열기" 항목 연결
+- [x] T069 [P] [US6] `src/pages/SaveReference.tsx` 구현 (팝업 창 전용): URL 자동채움 (쿼리 파라미터로 전달), 제목 입력, 태그 입력, 저장 후 창 닫힘 (`getCurrentWindow().close()`)
+- [x] T070 [P] [US6] `src/components/Settings/ShortcutSettings.tsx` 구현: 현재 단축키 표시, 새 단축키 입력(키 캡처), 저장 시 `updateSettings()` 호출
+- [x] T071 [P] [US6] `src/components/Settings/RetentionSettings.tsx` 구현: 7일/30일/90일/무제한 라디오 선택, 저장
+- [x] T072 [P] [US6] `src/components/Settings/RulesSettings.tsx` 구현: 규칙 목록 표시, 도메인+분류 추가 폼, 규칙 삭제 버튼 (즉시 반영)
+- [x] T073 [P] [US6] `src/components/Settings/AutoLaunchSettings.tsx` 구현: 자동 실행 토글 (macOS `loginItems` API)
+- [x] T074 [US6] `src/pages/Settings.tsx` 구현: 탭 또는 섹션으로 ShortcutSettings, RetentionSettings, RulesSettings, AutoLaunchSettings 통합
+- [x] T075 [US6] `src/pages/Dropdown.tsx` 업데이트: "Reference 저장" 버튼 클릭 시 인라인 폼 대신 `openSaveReferenceWindow()` 호출로 변경
 
 **체크포인트**: `cargo test`, `npm test` 통과, `⌘⇧R` 단축키로 팝업 열림, 설정 창에서 규칙 추가 후 분류 즉시 반영
 
@@ -209,8 +209,8 @@
 
 **목표**: 보관 기간 초과 데이터 자동 아카이빙, 앱 시작 시 미완료 세션 처리
 
-- [ ] T076 `src-tauri/src/lib.rs` 업데이트: 앱 시작 시 `archive_old_data()` 호출 (설정된 보관 기간 기준), 이후 `get_incomplete_session()` 확인
-- [ ] T077 `src/pages/Dropdown.tsx` 확인: 앱 초기화 시 `getIncompleteSession()` 호출, 미완료 세션 있으면 "이전 세션을 이어할까요?" 확인 다이얼로그 표시 (이미 T065에서 구현됨)
+- [x] T076 `src-tauri/src/lib.rs` 업데이트: 앱 시작 시 `archive_old_data()` 호출 (설정된 보관 기간 기준), 이후 `get_incomplete_session()` 확인
+- [x] T077 `src/pages/Dropdown.tsx` 확인: 앱 초기화 시 `getIncompleteSession()` 호출, 미완료 세션 있으면 "이전 세션을 이어할까요?" 확인 다이얼로그 표시 (이미 T065에서 구현됨)
 
 ---
 
@@ -218,11 +218,87 @@
 
 **목적**: 권한 오류 처리, 전체 테스트 검증, quickstart.md 기준 검증
 
-- [ ] T078 [P] Accessibility 권한 없을 때 트래커 중단 및 사용자 안내 UI 추가 (`src-tauri/src/services/tracker.rs`, `src/pages/Dropdown.tsx`)
-- [ ] T079 [P] Automation 권한 거부 시 `url = null` 처리 확인 및 에러 로그 추가 (`src-tauri/src/services/browser.rs`)
-- [ ] T080 [P] `cargo test --all` 전체 Rust 테스트 실행 및 미통과 테스트 수정
-- [ ] T081 [P] `npm test` 전체 React 테스트 실행 및 미통과 테스트 수정
-- [ ] T082 `specs/001-activity-focus-tracker/quickstart.md` 검증 체크리스트 기준으로 실제 앱 동작 확인
+- [x] T078 [P] Accessibility 권한 없을 때 트래커 중단 및 사용자 안내 UI 추가 (`src-tauri/src/services/tracker.rs`, `src/pages/Dropdown.tsx`)
+- [x] T079 [P] Automation 권한 거부 시 `url = null` 처리 확인 및 에러 로그 추가 (`src-tauri/src/services/browser.rs`)
+- [x] T080 [P] `cargo test --all` 전체 Rust 테스트 실행 및 미통과 테스트 수정
+- [x] T081 [P] `npm test` 전체 React 테스트 실행 및 미통과 테스트 수정
+- [x] T082 `specs/001-activity-focus-tracker/quickstart.md` 검증 체크리스트 기준으로 실제 앱 동작 확인
+
+---
+
+---
+
+## ✅ 완료된 Phase (Phase 1~10)
+
+Phase 1~10 전체 구현 완료 (2026-03-21). 이하는 v2 확장 Phase.
+
+---
+
+## Phase A: 온보딩 + 설정 완성 + 실시간 분류 변경
+
+**목표**: 첫 실행 경험 개선, 설정 기능 완성, Dropdown에서 즉각적인 분류 수정
+
+**체크포인트**: 온보딩 완료 후 직업 기반 규칙 적용 확인, Quick Override로 분류 변경 시 즉시 반영 및 영구 저장 확인
+
+### 테스트 먼저 작성 (Red)
+
+- [ ] TA001 [P] `src-tauri/src/commands/onboarding.rs` 테스트: `get_onboarding_status`, `complete_onboarding`, `apply_profession_rules` 단위 테스트
+- [ ] TA002 [P] `src-tauri/src/services/classifier.rs` 테스트: title_rules 우선 적용, 이중용도 도메인 title 매칭 테스트
+- [ ] TA003 [P] `src/__tests__/pages/Onboarding.test.tsx`: 직업 선택 렌더링, 스킵 동작, 완료 후 커맨드 호출 테스트
+- [ ] TA004 [P] `src/__tests__/components/Dropdown/QuickOverride.test.tsx`: 분류 배지 클릭 → 선택기 표시, "이번만"/"항상" 동작 테스트
+
+### 구현 (Green)
+
+- [ ] TA005 `src-tauri/migrations/V5__title_rules_onboarding.sql`: `title_rules` 테이블 + `onboarding_completed` 기본 settings 값 추가
+- [ ] TA006 [P] `src-tauri/src/services/classifier.rs` 업데이트: title_rules 조회 및 우선 적용 로직 추가 (domain + title keyword contains 매칭)
+- [ ] TA007 [P] `src-tauri/src/commands/onboarding.rs` 구현: `get_onboarding_status()`, `complete_onboarding(profession)`, `apply_profession_rules(profession)`, `add_title_rule(domain, keyword, category)`, `get_title_rules()`, `delete_title_rule(id)`
+- [ ] TA008 [P] `src-tauri/src/services/settings.rs` 업데이트: title_rules CRUD 서비스 함수 추가
+- [ ] TA009 `src-tauri/tauri.conf.json` 업데이트: `onboarding` 창 추가 (`width: 520, height: 460, decorations: true, visible: false`)
+- [ ] TA010 `src-tauri/src/lib.rs` 업데이트: 앱 시작 시 `onboarding_completed` 확인 → 미완료 시 onboarding 창 표시, 새 커맨드 등록
+- [ ] TA011 [P] `src-tauri/src/commands/session.rs` 업데이트: 세션 시작/종료 전역 단축키 커맨드 추가 (`register_session_shortcuts`)
+- [ ] TA012 [P] `src/pages/Onboarding.tsx` 구현: Step 1(Welcome) → Step 2(직업 선택) → Step 3(규칙 미리보기+완료) 3단계 플로우
+- [ ] TA013 [P] `src/components/Dropdown/QuickOverride.tsx` 구현: 분류 배지 클릭 → Focus/Neutral/Distraction 선택 → "이번만"/"항상 이렇게" 선택, title_rule 또는 domain_rule 저장
+- [ ] TA014 `src/pages/Dropdown.tsx` 업데이트: 현재 활동에 QuickOverride 컴포넌트 연결, 트레이 아이콘 상태 업데이트 로직 연결
+- [ ] TA015 [P] `src/services/onboarding.ts`: `getOnboardingStatus()`, `completeOnboarding(profession)`, `addTitleRule()`, `getTitleRules()`, `deleteTitleRule()` 서비스 레이어
+- [ ] TA016 `src/App.tsx` 업데이트: `onboarding` 창 라우팅 추가
+- [ ] TA017 [P] `src-tauri/src/lib.rs` 트레이 아이콘 갱신: 1초 루프에서 현재 분류 상태에 따라 🔵/🟢/🟡/🔴 업데이트
+- [ ] TA018 [P] `src/components/Settings/AutoLaunchSettings.tsx` 구현 (`tauri-plugin-autostart` 사용), Settings.tsx에 통합
+- [ ] TA019 `src/App.css` 업데이트: 온보딩 스타일, QuickOverride 스타일
+
+---
+
+## Phase B: 목표 + 알림
+
+**목표**: 사용자가 의도를 갖고 세션을 운영할 수 있도록
+
+- [ ] TB001 [P] `src-tauri/migrations/V6__goals.sql`: `session_goals` 테이블 추가 (`target_secs`, `date`)
+- [ ] TB002 [P] `src-tauri/src/commands/goal.rs`: `set_daily_goal(secs)`, `get_daily_goal()`, `get_goal_progress(date)` 커맨드
+- [ ] TB003 [P] `src/components/Dropdown/GoalProgress.tsx`: 목표 시간 설정 + 달성률 프로그레스 바
+- [ ] TB004 [P] `src-tauri/src/services/notification.rs`: `send_notification(title, body)` — macOS 알림 (`tauri-plugin-notification`)
+- [ ] TB005 [P] 세션 루프에 알림 로직 추가: 집중도 임계값(기본 40%) 이하 10분 지속 시 알림, 목표 달성 시 알림
+
+---
+
+## Phase C: Dashboard 강화
+
+**목표**: 데이터 기반 인사이트 제공
+
+- [ ] TC001 [P] `src-tauri/src/services/activity.rs` 추가: `query_weekly_report(start_date)`, `query_trend(days)` 쿼리
+- [ ] TC002 [P] `src/components/Dashboard/WeeklyReport.tsx`: 요일별 Focus 시간 바 차트 (이번 주 vs 지난 주)
+- [ ] TC003 [P] `src/components/Dashboard/TrendChart.tsx`: 최근 30일 Focus % 꺾은선 그래프
+- [ ] TC004 [P] `src/components/Dashboard/HabitInsights.tsx`: 요일/시간대별 패턴 분석 텍스트 요약
+- [ ] TC005 [P] `src/components/Dashboard/SavedReferences.tsx` 업데이트: 검색 입력창 + 태그 클릭 필터
+- [ ] TC006 `src/pages/Dashboard.tsx` 업데이트: 주간/트렌드 탭 추가, 인사이트 섹션 추가
+
+---
+
+## Phase D: 내보내기
+
+**목표**: 데이터 주권 + 외부 활용
+
+- [ ] TD001 [P] `src-tauri/src/commands/export.rs`: `export_data(start_date, end_date, format)` — CSV/JSON 생성 후 파일 저장 다이얼로그
+- [ ] TD002 [P] `src/components/Dashboard/ExportButton.tsx`: 날짜 범위 선택 + 형식 선택 (CSV/JSON) + 내보내기 버튼
+- [ ] TD003 `src/pages/Dashboard.tsx` 업데이트: ExportButton 추가
 
 ---
 

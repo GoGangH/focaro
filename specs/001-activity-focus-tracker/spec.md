@@ -214,3 +214,155 @@
 - 세션은 동시에 하나만 실행된다(다중 세션 미지원).
 - 브라우저 외 일반 앱(Xcode, Figma 등)은 url/domain 없이 app_name만 기록하며 Neutral로 분류된다.
 - 로우 Activity 데이터 기본 보관 기간은 30일이며, 사용자가 변경할 수 있다. 기간 초과 시 일별 집계(ArchivedDailySummary)로 자동 변환된다.
+
+---
+
+## 로드맵 — Phase A~D (v2 확장)
+
+> 핵심 기능(US1~US6) 완료 후 단계적으로 추가되는 기능들.
+
+---
+
+### Phase A — 온보딩 + 설정 완성
+
+#### A1. 온보딩 (첫 실행 설정)
+
+첫 실행 시 별도 온보딩 창이 표시된다.
+
+**플로우:**
+1. **Welcome 화면**: 앱 간략 소개 (추적 → 분류 → 분석 흐름 설명)
+2. **직업 선택**: 개발자 / 디자이너 / 마케터 / 기타 / 스킵
+3. **규칙 미리보기 + 완료**: 선택한 직업 기반 규칙 확인 후 시작
+
+**직업별 기본 규칙 추가 (app_name 기반):**
+
+| 직업 | Focus 추가 |
+|------|-----------|
+| 개발자 | iTerm2, Xcode, VS Code, IntelliJ IDEA, Terminal, Slack, Linear |
+| 디자이너 | Figma, Sketch, Adobe XD, Zeplin, Abstract |
+| 마케터 | Notion, HubSpot, Mailchimp |
+| 스킵/기타 | (기존 도메인 기본값만 유지) |
+
+**완료 감지**: `settings` 테이블의 `onboarding_completed` 키. 없으면 온보딩 창 표시.
+
+---
+
+#### A2. 로그인 시 자동 실행
+
+- `tauri-plugin-autostart` 사용
+- 설정 창에 토글 추가 (기본값: OFF)
+- ON 시 macOS LaunchAgents에 등록, OFF 시 해제
+
+---
+
+#### A3. 트레이 아이콘 상태 반영
+
+현재 활동 분류에 따라 트레이 아이콘 변경:
+- 세션 없음: 🔵
+- Focus: 🟢
+- Neutral: 🟡
+- Distraction: 🔴
+
+---
+
+#### A4. 단축키 확장
+
+세션 시작/종료도 전역 단축키로 등록:
+- 세션 시작: `⌘⇧S` (기본값, 변경 가능)
+- 세션 종료: `⌘⇧E` (기본값, 변경 가능)
+- 설정 창에서 변경 가능
+
+---
+
+#### A5. 실시간 분류 변경 (Quick Override)
+
+Dropdown에서 현재 활동의 분류를 즉시 변경할 수 있다.
+
+**동작:**
+1. 현재 활동 분류 배지 클릭 → Focus / Neutral / Distraction 선택기 표시
+2. 선택 후 옵션 제시:
+   - **"이번만 변경"**: 현재 세션의 해당 activity만 업데이트
+   - **"항상 이렇게"**: 규칙 영구 저장
+
+**제목 기반 규칙 (Title-aware Classification):**
+
+YouTube, Instagram 등 콘텐츠에 따라 분류가 달라지는 사이트는 도메인 규칙 대신 **페이지 제목 키워드** 기반 규칙으로 저장된다.
+
+- 예: youtube.com에서 "React Tutorial" 시청 중 → Focus 선택 → `title_rules`에 (youtube.com, "react tutorial", Focus) 저장
+- 이후 youtube.com에서 "react" 포함 제목 → 자동으로 Focus 분류
+
+**이중 용도 도메인** (youtube.com, instagram.com, reddit.com 등)은 도메인 규칙보다 title_rules가 우선 적용된다.
+
+**분류 우선순위:**
+1. title_rules (domain + title keyword 매칭) — 최우선
+2. classification_rules (domain 매칭)
+3. 내장 기본 규칙
+4. Neutral (기본값)
+
+**DB 변경:** `title_rules` 테이블 신규 추가
+```sql
+CREATE TABLE title_rules (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    domain   TEXT NOT NULL,
+    keyword  TEXT NOT NULL,  -- 소문자, title contains 매칭
+    category TEXT NOT NULL
+);
+```
+
+---
+
+### Phase B — 목표 + 알림
+
+#### B1. 세션 목표 설정
+
+- Dropdown에서 "오늘 목표" 시간 설정 (1~8시간)
+- 달성률 프로그레스 바 표시
+- 목표 달성 시 macOS 알림
+
+#### B2. Focus Score 알림
+
+- 세션 중 집중도가 설정한 임계값(기본 40%) 이하로 10분 이상 지속 시 macOS 알림
+- 알림 임계값 설정 창에서 변경 가능
+
+---
+
+### Phase C — Dashboard 강화
+
+#### C1. 주간 리포트
+
+- Dashboard에 "주간" 뷰 탭 추가
+- 요일별 Focus 시간 바 차트
+- 이번 주 vs 지난 주 비교
+
+#### C2. 트렌드 차트
+
+- 최근 30일 Focus % 꺾은선 그래프
+- 주간 평균 추이 확인
+
+#### C3. 앱별 습관 분석
+
+- 시간대별, 요일별 앱 사용 패턴 표시
+- "월~화에 Slack 사용 집중" 등 패턴 텍스트 요약
+
+#### C4. Reference 검색
+
+- Dashboard References 탭에 텍스트 검색 입력창
+- 태그 클릭 필터링
+
+---
+
+### Phase D — 내보내기
+
+#### D1. CSV / JSON 내보내기
+
+- Dashboard에 내보내기 버튼
+- 날짜 범위 선택 → 활동 / 세션 / Reference 데이터 내보내기
+- 형식: CSV (스프레드시트 호환), JSON (개발자용)
+
+---
+
+### 보류 — AI 분류 제안
+
+Claude API 연동 방식, 비용, 오프라인 동작 여부 결정 후 별도 진행.
+
+아이디어: 새 도메인 첫 방문 시 "이 도메인을 어떻게 분류할까요?" 또는 제목 분석 기반 자동 제안.
