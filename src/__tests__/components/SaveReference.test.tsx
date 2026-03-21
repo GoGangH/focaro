@@ -31,6 +31,9 @@ describe("SaveReference", () => {
   });
 
   it("버튼 클릭 시 폼 표시", async () => {
+    mockIPC((cmd) => {
+      if (cmd === "get_current_title") return null;
+    });
     render(<SaveReference currentUrl="https://github.com" />);
     fireEvent.click(screen.getByRole("button", { name: /reference 저장/i }));
     await waitFor(() => {
@@ -38,15 +41,22 @@ describe("SaveReference", () => {
     });
   });
 
-  it("폼에 URL이 자동으로 채워짐", async () => {
+  it("폼 열릴 때 get_current_title로 타이틀 자동 채움", async () => {
+    mockIPC((cmd) => {
+      if (cmd === "get_current_title") return "GitHub";
+    });
     render(<SaveReference currentUrl="https://github.com" />);
     fireEvent.click(screen.getByRole("button", { name: /reference 저장/i }));
     await waitFor(() => {
-      expect(screen.getByDisplayValue("https://github.com")).toBeTruthy();
+      const input = screen.getByPlaceholderText("제목 입력") as HTMLInputElement;
+      expect(input.value).toBe("GitHub");
     });
   });
 
   it("제목 없이 저장 버튼 클릭 시 저장 안 됨", async () => {
+    mockIPC((cmd) => {
+      if (cmd === "get_current_title") return null;
+    });
     const saved = vi.fn();
     render(<SaveReference currentUrl="https://github.com" onSaved={saved} />);
     fireEvent.click(screen.getByRole("button", { name: /reference 저장/i }));
@@ -57,6 +67,7 @@ describe("SaveReference", () => {
 
   it("제목 입력 후 저장 시 save_reference 커맨드 호출", async () => {
     mockIPC((cmd) => {
+      if (cmd === "get_current_title") return null;
       if (cmd === "save_reference") return REFERENCE_MOCK;
     });
     const onSaved = vi.fn();
@@ -77,6 +88,7 @@ describe("SaveReference", () => {
 
   it("저장 후 폼이 닫힘", async () => {
     mockIPC((cmd) => {
+      if (cmd === "get_current_title") return null;
       if (cmd === "save_reference") return REFERENCE_MOCK;
     });
     render(<SaveReference currentUrl="https://github.com" />);
@@ -95,6 +107,9 @@ describe("SaveReference", () => {
   });
 
   it("취소 버튼 클릭 시 폼 닫힘", async () => {
+    mockIPC((cmd) => {
+      if (cmd === "get_current_title") return null;
+    });
     render(<SaveReference currentUrl="https://github.com" />);
     fireEvent.click(screen.getByRole("button", { name: /reference 저장/i }));
     await waitFor(() => screen.getByPlaceholderText("제목 입력"));

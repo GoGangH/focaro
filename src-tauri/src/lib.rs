@@ -20,6 +20,9 @@ use state::app_state::AppState;
 pub fn run() {
     let mut builder = tauri::Builder::default();
 
+    // opener 플러그인 — URL/파일을 기본 앱으로 열기, 크로스플랫폼 지원
+    builder = builder.plugin(tauri_plugin_opener::init());
+
     // NSPanel 플러그인 — 전체화면 앱 위에 표시되는 메뉴바 드롭다운 구현
     #[cfg(target_os = "macos")]
     {
@@ -53,6 +56,18 @@ pub fn run() {
             // NSWindow → NSPanel 변환 + 전체화면 위에 뜨도록 설정
             #[cfg(target_os = "macos")]
             init_menubar_panel(app.handle(), &dropdown);
+
+            // 대시보드 창: X로 닫아도 파괴되지 않고 숨기기만 함
+            // → 재오픈 시 get_webview_window("dashboard")가 항상 Some을 반환
+            if let Some(dashboard) = app.get_webview_window("dashboard") {
+                let win = dashboard.clone();
+                dashboard.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        api.prevent_close();
+                        let _ = win.hide();
+                    }
+                });
+            }
 
             // 트레이 우클릭 메뉴
             let quit_item = MenuItem::with_id(app, "quit", "focaro 종료", true, None::<&str>)?;
@@ -120,8 +135,15 @@ pub fn run() {
             commands::session::get_top_apps,
             commands::session::get_current_app,
             commands::session::get_current_url,
+            commands::session::get_current_title,
             commands::reference::save_reference,
             commands::reference::get_references,
+            commands::reference::delete_reference,
+            commands::reference::update_reference,
+            commands::activity::get_activity_timeline,
+            commands::activity::get_top_sites,
+            commands::activity::get_daily_focus_stats,
+            commands::activity::get_session_events,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -131,6 +131,55 @@ pub fn get_references(
     Ok(refs)
 }
 
+pub fn delete_reference(pool: &DbPool, id: &str) -> Result<(), AppError> {
+    let conn = pool.get().map_err(AppError::from)?;
+    let affected = conn
+        .execute(r#"DELETE FROM "references" WHERE id = ?1"#, rusqlite::params![id])
+        .map_err(AppError::from)?;
+    if affected == 0 {
+        return Err(AppError::NotFound(format!("reference {id} not found")));
+    }
+    Ok(())
+}
+
+pub fn update_reference(
+    pool: &DbPool,
+    id: &str,
+    title: &str,
+    tags: Vec<String>,
+) -> Result<Reference, AppError> {
+    let tags_json =
+        serde_json::to_string(&tags).map_err(|e| AppError::Internal(e.to_string()))?;
+
+    let conn = pool.get().map_err(AppError::from)?;
+    let affected = conn
+        .execute(
+            r#"UPDATE "references" SET title = ?1, tags = ?2 WHERE id = ?3"#,
+            rusqlite::params![title, tags_json, id],
+        )
+        .map_err(AppError::from)?;
+    if affected == 0 {
+        return Err(AppError::NotFound(format!("reference {id} not found")));
+    }
+
+    let (session_id, url, created_at): (String, String, i64) = conn
+        .query_row(
+            r#"SELECT session_id, url, created_at FROM "references" WHERE id = ?1"#,
+            rusqlite::params![id],
+            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+        )
+        .map_err(AppError::from)?;
+
+    Ok(Reference {
+        id: id.to_string(),
+        session_id,
+        url,
+        title: title.to_string(),
+        tags,
+        created_at: unix_to_iso(created_at),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

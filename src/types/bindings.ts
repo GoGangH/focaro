@@ -18,9 +18,16 @@ export interface Activity {
   app_name: string;
   url: string | null;
   domain: string | null;
+  title: string | null;
   classification: Classification;
   started_at: string;
-  duration_secs: number;
+  duration_secs: number | null;
+}
+
+export interface SessionEvent {
+  session_id: string;
+  event_type: "start" | "end" | "end_incomplete";
+  timestamp: string;
 }
 
 export interface FocusStats {
@@ -60,6 +67,12 @@ export interface Reference {
   title: string;
   tags: string[];
   created_at: string;
+}
+
+export interface UpdateReferenceInput {
+  id: string;
+  title: string;
+  tags: string[];
 }
 
 export interface AppSettings {

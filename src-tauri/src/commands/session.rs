@@ -285,6 +285,28 @@ pub async fn get_current_url() -> Result<Option<String>, AppError> {
 }
 
 #[tauri::command]
+pub async fn get_current_title() -> Result<Option<String>, AppError> {
+    #[cfg(target_os = "macos")]
+    {
+        use crate::services::browser;
+        use objc2_app_kit::NSWorkspace;
+        let app_name = unsafe {
+            let workspace = NSWorkspace::sharedWorkspace();
+            workspace
+                .frontmostApplication()
+                .and_then(|a| a.localizedName())
+                .map(|s| s.to_string())
+        };
+        if let Some(name) = app_name {
+            return Ok(browser::get_browser_title(&name));
+        }
+        return Ok(None);
+    }
+    #[cfg(not(target_os = "macos"))]
+    Ok(None)
+}
+
+#[tauri::command]
 pub async fn open_dashboard(app_handle: AppHandle) -> Result<(), AppError> {
     use tauri::Manager;
     if let Some(window) = app_handle.get_webview_window("dashboard") {
@@ -293,3 +315,4 @@ pub async fn open_dashboard(app_handle: AppHandle) -> Result<(), AppError> {
     }
     Ok(())
 }
+

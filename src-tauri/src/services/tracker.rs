@@ -14,6 +14,7 @@ struct CurrentActivity {
     app_name: String,
     url: Option<String>,
     domain: Option<String>,
+    title: Option<String>,
     started_at: i64,
 }
 
@@ -80,10 +81,16 @@ pub fn start_tracker(
                 match &prev {
                     Some(p) if p.is_same(&app_name, url.as_deref()) => {}
                     _ => {
+                        let title = if url.is_some() {
+                            browser::get_browser_title(&app_name)
+                        } else {
+                            None
+                        };
                         prev = Some(CurrentActivity {
                             app_name,
                             url,
                             domain,
+                            title,
                             started_at: now,
                         });
                     }
@@ -124,8 +131,8 @@ fn poll_once(
                 let classification = classifier::classify(prev.domain.as_deref(), &rules);
 
                 conn.execute(
-                    "INSERT INTO activities (id, session_id, app_name, url, domain, classification, started_at, duration_secs)
-                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                    "INSERT INTO activities (id, session_id, app_name, url, domain, classification, started_at, duration_secs, title)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
                     rusqlite::params![
                         uuid::Uuid::new_v4().to_string(),
                         session_id,
@@ -135,6 +142,7 @@ fn poll_once(
                         classification_to_str(&classification),
                         prev.started_at,
                         duration,
+                        prev.title,
                     ],
                 )
                 .map_err(AppError::from)?;

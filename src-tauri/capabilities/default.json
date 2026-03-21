@@ -4,6 +4,7 @@
   "description": "focaro 앱 기본 권한",
   "windows": ["dropdown", "dashboard"],
   "permissions": [
-    "core:default"
+    "core:default",
+    "opener:default"
   ]
 }
