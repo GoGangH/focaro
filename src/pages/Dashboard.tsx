@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import type { Activity, DomainSummary, FocusMetrics, Reference } from "../types/bindings";
-import { getActivityTimeline, getTopSites, getDailyFocusStats } from "../services/activity";
+import type { Activity, DomainSummary, FocusMetrics, Reference, SessionEvent } from "../types/bindings";
+import { getActivityTimeline, getTopSites, getDailyFocusStats, getSessionEvents } from "../services/activity";
 import { getReferences } from "../services/reference";
 import { ActivityTimeline } from "../components/Dashboard/ActivityTimeline";
 import { TopSites } from "../components/Dashboard/TopSites";
@@ -17,6 +17,7 @@ export function Dashboard() {
   const [date, setDate] = useState(todayDateStr);
   const [tab, setTab] = useState<Tab>("timeline");
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [sessionEvents, setSessionEvents] = useState<SessionEvent[]>([]);
   const [sites, setSites] = useState<DomainSummary[]>([]);
   const [metrics, setMetrics] = useState<FocusMetrics | null>(null);
   const [refs, setRefs] = useState<Reference[]>([]);
@@ -25,13 +26,15 @@ export function Dashboard() {
   const loadData = useCallback(async (d: string) => {
     setLoading(true);
     try {
-      const [acts, topSites, focusStats, references] = await Promise.all([
+      const [acts, events, topSites, focusStats, references] = await Promise.all([
         getActivityTimeline(d),
+        getSessionEvents(d),
         getTopSites(d, 20),
         getDailyFocusStats(d),
         getReferences(),
       ]);
       setActivities(acts);
+      setSessionEvents(events);
       setSites(topSites);
       setMetrics(focusStats);
       setRefs(references);
@@ -81,7 +84,7 @@ export function Dashboard() {
           <p className="dash-loading">로딩 중...</p>
         ) : (
           <>
-            {tab === "timeline" && <ActivityTimeline activities={activities} />}
+            {tab === "timeline" && <ActivityTimeline activities={activities} sessionEvents={sessionEvents} />}
             {tab === "sites" && <TopSites sites={sites} />}
             {tab === "score" && <FocusScore metrics={metrics} />}
             {tab === "refs" && (

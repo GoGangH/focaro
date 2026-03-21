@@ -8,9 +8,16 @@ pub struct ActivityRow {
     pub app_name: String,
     pub url: Option<String>,
     pub domain: Option<String>,
+    pub title: Option<String>,
     pub classification: String,
     pub started_at: String, // ISO
     pub duration_secs: Option<i64>,
+}
+
+pub struct SessionEvent {
+    pub session_id: String,
+    pub event_type: String, // "start" | "end"
+    pub timestamp: String,  // ISO
 }
 
 pub struct DomainStat {
@@ -26,15 +33,15 @@ pub struct DailyFocusStats {
     pub distraction_secs: i64,
 }
 
-/// 특정 날짜(UTC)의 활동 타임라인 조회 (시간순)
+/// 특정 날짜(UTC)의 활동 타임라인 조회 (최신순)
 pub fn query_activity_timeline(pool: &DbPool, date: &str) -> Result<Vec<ActivityRow>, AppError> {
     let conn = pool.get().map_err(AppError::from)?;
     let mut stmt = conn
         .prepare(
-            "SELECT id, session_id, app_name, url, domain, classification, started_at, duration_secs
+            "SELECT id, session_id, app_name, url, domain, classification, started_at, duration_secs, title
              FROM activities
              WHERE date(started_at, 'unixepoch') = ?1
-             ORDER BY started_at ASC",
+             ORDER BY started_at DESC",
         )
         .map_err(AppError::from)?;
 
@@ -50,6 +57,7 @@ pub fn query_activity_timeline(pool: &DbPool, date: &str) -> Result<Vec<Activity
                 classification: r.get(5)?,
                 started_at: unix_to_iso(ts),
                 duration_secs: r.get(7)?,
+                title: r.get(8)?,
             })
         })
         .map_err(AppError::from)?;
@@ -59,6 +67,49 @@ pub fn query_activity_timeline(pool: &DbPool, date: &str) -> Result<Vec<Activity
         result.push(row.map_err(AppError::from)?);
     }
     Ok(result)
+}
+
+/// 특정 날짜(UTC)의 세션 시작/종료 이벤트 조회
+pub fn query_session_events(pool: &DbPool, date: &str) -> Result<Vec<SessionEvent>, AppError> {
+    let conn = pool.get().map_err(AppError::from)?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, started_at, ended_at, is_complete
+             FROM sessions
+             WHERE date(started_at, 'unixepoch') = ?1
+                OR (ended_at IS NOT NULL AND date(ended_at, 'unixepoch') = ?1)
+             ORDER BY started_at ASC",
+        )
+        .map_err(AppError::from)?;
+
+    let rows = stmt
+        .query_map(rusqlite::params![date], |r| {
+            let id: String = r.get(0)?;
+            let started_at: i64 = r.get(1)?;
+            let ended_at: Option<i64> = r.get(2)?;
+            let is_complete: i64 = r.get(3)?;
+            Ok((id, started_at, ended_at, is_complete))
+        })
+        .map_err(AppError::from)?;
+
+    let mut events = Vec::new();
+    for row in rows {
+        let (id, started_at, ended_at, is_complete) = row.map_err(AppError::from)?;
+        events.push(SessionEvent {
+            session_id: id.clone(),
+            event_type: "start".to_string(),
+            timestamp: unix_to_iso(started_at),
+        });
+        if let Some(ended) = ended_at {
+            let event_type = if is_complete == 1 { "end" } else { "end_incomplete" };
+            events.push(SessionEvent {
+                session_id: id,
+                event_type: event_type.to_string(),
+                timestamp: unix_to_iso(ended),
+            });
+        }
+    }
+    Ok(events)
 }
 
 /// 특정 날짜(UTC)의 도메인별 누적 시간 (domain이 NULL인 항목 제외, 내림차순)

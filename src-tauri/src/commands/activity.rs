@@ -12,9 +12,17 @@ pub struct ActivityRow {
     pub app_name: String,
     pub url: Option<String>,
     pub domain: Option<String>,
+    pub title: Option<String>,
     pub classification: String,
     pub started_at: String,
     pub duration_secs: Option<i64>,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct SessionEvent {
+    pub session_id: String,
+    pub event_type: String,
+    pub timestamp: String,
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -56,6 +64,7 @@ pub async fn get_activity_timeline(
             app_name: r.app_name,
             url: r.url,
             domain: r.domain,
+            title: r.title,
             classification: r.classification,
             started_at: r.started_at,
             duration_secs: r.duration_secs,
@@ -78,6 +87,24 @@ pub async fn get_top_sites(
             domain: s.domain,
             total_secs: s.total_secs,
             classification: s.classification,
+        })
+        .collect())
+}
+
+/// 특정 날짜(UTC)의 세션 시작/종료 이벤트
+#[tauri::command]
+pub async fn get_session_events(
+    date: String,
+    state: State<'_, Mutex<AppState>>,
+) -> Result<Vec<SessionEvent>, AppError> {
+    let pool = get_pool(&state);
+    let events = activity_svc::query_session_events(&pool, &date)?;
+    Ok(events
+        .into_iter()
+        .map(|e| SessionEvent {
+            session_id: e.session_id,
+            event_type: e.event_type,
+            timestamp: e.timestamp,
         })
         .collect())
 }

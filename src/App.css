@@ -373,6 +373,23 @@ body {
   margin-top: 4px;
 }
 
+.timeline-item--event .timeline-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 8px;
+  margin-top: 0;
+}
+
+.timeline-event-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .timeline-content {
   flex: 1;
   padding-bottom: 8px;

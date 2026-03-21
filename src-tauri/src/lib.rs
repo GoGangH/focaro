@@ -131,6 +131,7 @@ pub fn run() {
             commands::activity::get_activity_timeline,
             commands::activity::get_top_sites,
             commands::activity::get_daily_focus_stats,
+            commands::activity::get_session_events,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
