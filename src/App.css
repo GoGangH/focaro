@@ -356,16 +356,9 @@ body {
 }
 
 /* DatePicker 팝업 */
-.datepicker-root {
-  position: relative;
-}
-
 .datepicker-popup {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
+  position: fixed;
+  z-index: 9999;
   background: #1c1c1e;
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 14px;
