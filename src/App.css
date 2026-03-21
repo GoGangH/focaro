@@ -807,3 +807,282 @@ body {
   margin-top: 6px;
   text-align: right;
 }
+
+/* ── Settings 페이지 ─────────────────────────────────────────────────────── */
+
+.settings-page {
+  padding: 24px;
+  color: #e5e5ea;
+  background: #1c1c1e;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+}
+
+.settings-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #fff;
+}
+
+.settings-section {
+  margin-bottom: 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding-bottom: 20px;
+}
+
+.settings-section:last-of-type {
+  border-bottom: none;
+}
+
+.settings-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #aeaeb2;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.settings-desc {
+  font-size: 12px;
+  color: #636366;
+  margin-bottom: 12px;
+}
+
+.settings-shortcut-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-shortcut-badge {
+  background: rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  color: #e5e5ea;
+}
+
+.settings-shortcut-input {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 13px;
+  color: #e5e5ea;
+  outline: none;
+  min-width: 200px;
+}
+
+.settings-radio-group {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.settings-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.settings-rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.settings-rule-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+}
+
+.settings-rule-domain {
+  flex: 1;
+  font-size: 13px;
+}
+
+.settings-rule-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.settings-rule-badge--focus { background: rgba(48,209,88,0.15); color: #30d158; }
+.settings-rule-badge--distraction { background: rgba(255,69,58,0.15); color: #ff453a; }
+.settings-rule-badge--neutral { background: rgba(255,255,255,0.08); color: #aeaeb2; }
+
+.settings-rule-add {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.settings-input {
+  flex: 1;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #e5e5ea;
+  outline: none;
+}
+
+.settings-input:focus {
+  border-color: #0a84ff;
+}
+
+.settings-select {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: #e5e5ea;
+  outline: none;
+  cursor: pointer;
+}
+
+.settings-btn-sm {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: #e5e5ea;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.settings-btn-sm:hover { background: rgba(255,255,255,0.15); }
+
+.settings-btn-sm--danger {
+  background: rgba(255,69,58,0.12);
+  color: #ff453a;
+}
+.settings-btn-sm--danger:hover { background: rgba(255,69,58,0.2); }
+
+.settings-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.settings-save-btn {
+  background: #0a84ff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+
+.settings-save-btn:hover { background: #0076ea; }
+.settings-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.settings-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: #636366;
+  font-size: 13px;
+}
+
+/* ── SaveReferencePage (팝업 창) ─────────────────────────────────────────── */
+
+.save-ref-page {
+  padding: 20px;
+  background: #1c1c1e;
+  color: #e5e5ea;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+}
+
+.save-ref-page-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.save-ref-page-url {
+  font-size: 11px;
+  color: #636366;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.save-ref-page-input {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  color: #e5e5ea;
+  outline: none;
+}
+
+.save-ref-page-input:focus {
+  border-color: #0a84ff;
+}
+
+.save-ref-page-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.save-ref-page-btn {
+  flex: 1;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 0;
+  font-size: 14px;
+  color: #e5e5ea;
+  cursor: pointer;
+}
+
+.save-ref-page-btn--primary {
+  background: #0a84ff;
+  color: #fff;
+  font-weight: 600;
+}
+
+.save-ref-page-btn--primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Dropdown footer ──────────────────────────────────────────────────────── */
+
+.dd-footer {
+  display: flex;
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+
+.dd-footer .dashboard-btn {
+  flex: 1;
+}

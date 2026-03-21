@@ -16,12 +16,16 @@ use tauri_nspanel::ManagerExt;
 
 use services::db;
 use state::app_state::AppState;
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 pub fn run() {
     let mut builder = tauri::Builder::default();
 
     // opener 플러그인 — URL/파일을 기본 앱으로 열기, 크로스플랫폼 지원
     builder = builder.plugin(tauri_plugin_opener::init());
+
+    // global-shortcut 플러그인 — 전역 단축키 등록 (⌘⇧R)
+    builder = builder.plugin(tauri_plugin_global_shortcut::Builder::new().build());
 
     // NSPanel 플러그인 — 전체화면 앱 위에 표시되는 메뉴바 드롭다운 구현
     #[cfg(target_os = "macos")]
@@ -57,6 +61,30 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             init_menubar_panel(app.handle(), &dropdown);
 
+            // 전역 단축키 ⌘⇧R → Reference 저장 팝업 열기
+            let shortcut_str = {
+                let state = app.state::<Mutex<AppState>>();
+                let pool = state.lock().unwrap().db_pool.clone();
+                let conn = pool.get().expect("DB 연결 실패");
+                services::settings::get_settings(&conn)
+                    .map(|s| s.shortcut_save_ref)
+                    .unwrap_or_else(|_| "CmdOrCtrl+Shift+R".to_string())
+            };
+            register_save_reference_shortcut(app.handle(), &shortcut_str);
+
+            // 설정 창 / Reference 팝업: X로 닫아도 숨기기만 함
+            for label in &["settings", "save-reference"] {
+                if let Some(win) = app.get_webview_window(label) {
+                    let w = win.clone();
+                    win.on_window_event(move |event| {
+                        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                            api.prevent_close();
+                            let _ = w.hide();
+                        }
+                    });
+                }
+            }
+
             // 대시보드 창: X로 닫아도 파괴되지 않고 숨기기만 함
             // → 재오픈 시 get_webview_window("dashboard")가 항상 Some을 반환
             if let Some(dashboard) = app.get_webview_window("dashboard") {
@@ -70,8 +98,9 @@ pub fn run() {
             }
 
             // 트레이 우클릭 메뉴
+            let settings_item = MenuItem::with_id(app, "settings", "설정", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "focaro 종료", true, None::<&str>)?;
-            let tray_menu = Menu::with_items(app, &[&quit_item])?;
+            let tray_menu = Menu::with_items(app, &[&settings_item, &quit_item])?;
 
             // 트레이 클릭 핸들러
             let tray_app = app.handle().clone();
@@ -80,8 +109,15 @@ pub fn run() {
                 .menu(&tray_menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| {
-                    if event.id() == "quit" {
-                        app.exit(0);
+                    match event.id().as_ref() {
+                        "quit" => app.exit(0),
+                        "settings" => {
+                            if let Some(win) = app.get_webview_window("settings") {
+                                let _ = win.show();
+                                let _ = win.set_focus();
+                            }
+                        }
+                        _ => {}
                     }
                 })
                 .on_tray_icon_event(move |tray, event| {
@@ -144,6 +180,13 @@ pub fn run() {
             commands::activity::get_top_sites,
             commands::activity::get_daily_focus_stats,
             commands::activity::get_session_events,
+            commands::settings::get_settings,
+            commands::settings::update_settings,
+            commands::settings::get_classification_rules,
+            commands::settings::add_classification_rule,
+            commands::settings::delete_classification_rule,
+            commands::settings::open_settings_window,
+            commands::settings::open_save_reference_window,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -251,6 +294,31 @@ fn request_accessibility_permission() {
             forKey: &*key
         ];
         AXIsProcessTrustedWithOptions(dict as *const std::ffi::c_void);
+    }
+}
+
+/// 전역 단축키 등록 (설정 변경 시 재호출)
+pub fn register_save_reference_shortcut(app: &tauri::AppHandle, shortcut_str: &str) {
+    // 기존 단축키 전체 해제 후 재등록
+    let _ = app.global_shortcut().unregister_all();
+
+    let Ok(shortcut) = shortcut_str.parse::<Shortcut>() else {
+        eprintln!("단축키 파싱 실패: {shortcut_str}");
+        return;
+    };
+
+    let app_handle = app.clone();
+    let result = app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, event| {
+        if event.state == ShortcutState::Pressed {
+            if let Some(win) = app_handle.get_webview_window("save-reference") {
+                let _ = win.show();
+                let _ = win.set_focus();
+            }
+        }
+    });
+
+    if let Err(e) = result {
+        eprintln!("단축키 등록 실패: {e}");
     }
 }
 

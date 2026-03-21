@@ -77,4 +77,11 @@ export interface UpdateReferenceInput {
 
 export interface AppSettings {
   retention_days: number;
+  shortcut_save_ref: string;
+}
+
+export interface ClassificationRule {
+  id: number;
+  domain: string;
+  category: string;
 }

@@ -13,7 +13,7 @@ import {
   getCurrentUrl,
 } from "../services/session";
 import { DonutChart } from "../components/Dropdown/DonutChart";
-import { SaveReference } from "../components/Dropdown/SaveReference";
+import { openSaveReferenceWindow, openSettingsWindow } from "../services/settings";
 
 function formatTimer(totalSecs: number): string {
   const h = Math.floor(totalSecs / 3600);
@@ -162,11 +162,20 @@ export function Dropdown() {
 
       {/* Reference 저장 (세션 진행 중일 때만) */}
       {session && (
-        <SaveReference currentUrl={currentUrl} />
+        <button
+          className={`dashboard-btn${currentUrl ? " dashboard-btn--active" : ""}`}
+          onClick={openSaveReferenceWindow}
+          disabled={!currentUrl}
+        >
+          Reference 저장
+        </button>
       )}
 
       {/* Footer */}
-      <button onClick={openDashboard} className="dashboard-btn">Dashboard 열기</button>
+      <div className="dd-footer">
+        <button onClick={openDashboard} className="dashboard-btn">Dashboard 열기</button>
+        <button onClick={openSettingsWindow} className="dashboard-btn">설정</button>
+      </div>
     </div>
   );
 }

@@ -6,4 +6,5 @@ pub mod db;
 pub mod metrics;
 pub mod reference;
 pub mod session;
+pub mod settings;
 pub mod tracker;

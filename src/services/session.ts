@@ -44,3 +44,7 @@ export async function getCurrentApp(): Promise<string | null> {
 export async function getCurrentUrl(): Promise<string | null> {
   return invoke<string | null>("get_current_url");
 }
+
+export async function getCurrentTitle(): Promise<string | null> {
+  return invoke<string | null>("get_current_title");
+}
