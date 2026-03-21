@@ -58,15 +58,8 @@ export interface Reference {
   session_id: string;
   url: string;
   title: string;
-  tags: string | null;
+  tags: string[];
   created_at: string;
-}
-
-export interface SaveReferenceInput {
-  session_id: string;
-  url: string;
-  title: string;
-  tags: string | null;
 }
 
 export interface AppSettings {

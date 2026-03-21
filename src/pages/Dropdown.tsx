@@ -10,8 +10,10 @@ import {
   getFocusStats,
   getTopApps,
   getCurrentApp,
+  getCurrentUrl,
 } from "../services/session";
 import { DonutChart } from "../components/Dropdown/DonutChart";
+import { SaveReference } from "../components/Dropdown/SaveReference";
 
 function formatTimer(totalSecs: number): string {
   const h = Math.floor(totalSecs / 3600);
@@ -35,6 +37,7 @@ export function Dropdown() {
   const [topApps, setTopApps] = useState<AppStat[]>([]);
   const [currentApp, setCurrentApp] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
 
   // Recovery check on mount
   useEffect(() => {
@@ -45,14 +48,16 @@ export function Dropdown() {
 
   // Poll stats every 5s when session active
   const refreshStats = useCallback(async (sid: string) => {
-    const [s, apps, app] = await Promise.all([
+    const [s, apps, app, url] = await Promise.all([
       getFocusStats(sid),
       getTopApps(sid),
       getCurrentApp(),
+      getCurrentUrl(),
     ]);
     setStats(s);
     setTopApps(apps);
     setCurrentApp(app);
+    setCurrentUrl(url);
     setElapsed(s.total_secs);
   }, []);
 
@@ -153,6 +158,11 @@ export function Dropdown() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Reference 저장 (세션 진행 중일 때만) */}
+      {session && (
+        <SaveReference currentUrl={currentUrl} />
       )}
 
       {/* Footer */}
