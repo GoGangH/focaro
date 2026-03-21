@@ -341,6 +341,133 @@ body {
   user-select: none;
 }
 
+/* DatePicker 트리거 버튼 — dash-date-label 스타일 위에 추가 */
+.datepicker-trigger {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  height: 28px;
+  transition: background 0.12s;
+}
+
+.datepicker-trigger:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+/* DatePicker 팝업 */
+.datepicker-root {
+  position: relative;
+}
+
+.datepicker-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: #1c1c1e;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 12px;
+  width: 240px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+}
+
+.datepicker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.datepicker-month {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.datepicker-nav {
+  background: transparent;
+  border: none;
+  color: #8e8e93;
+  font-size: 20px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+  padding: 0;
+  line-height: 1;
+}
+
+.datepicker-nav:hover:not(:disabled) {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.datepicker-nav:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.datepicker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.datepicker-weekday {
+  font-size: 11px;
+  color: #636366;
+  text-align: center;
+  padding: 2px 0 6px;
+  font-weight: 500;
+}
+
+.datepicker-day {
+  background: transparent;
+  border: none;
+  color: #e5e5ea;
+  font-size: 13px;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, color 0.1s;
+  padding: 0;
+}
+
+.datepicker-day:hover:not(:disabled):not(.datepicker-day--selected) {
+  background: rgba(255,255,255,0.1);
+}
+
+.datepicker-day--today {
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.datepicker-day--selected {
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 700;
+}
+
+.datepicker-day--selected:hover {
+  background: #2563eb;
+}
+
+.datepicker-day--disabled {
+  color: #3a3a3c;
+  cursor: default;
+}
+
 .dash-tabs {
   display: flex;
   gap: 4px;

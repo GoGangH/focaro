@@ -6,6 +6,7 @@ import { ActivityTimeline } from "../components/Dashboard/ActivityTimeline";
 import { TopSites } from "../components/Dashboard/TopSites";
 import { FocusScore } from "../components/Dashboard/FocusScore";
 import { SavedReferences } from "../components/Dashboard/SavedReferences";
+import { DatePicker } from "../components/Dashboard/DatePicker";
 
 function todayDateStr(): string {
   return new Date().toISOString().split("T")[0];
@@ -17,14 +18,6 @@ function shiftDate(dateStr: string, days: number): string {
   return d.toISOString().split("T")[0];
 }
 
-function formatDateLabel(dateStr: string): string {
-  const today = todayDateStr();
-  const yesterday = shiftDate(today, -1);
-  if (dateStr === today) return "오늘";
-  if (dateStr === yesterday) return "어제";
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" });
-}
 
 type Tab = "timeline" | "sites" | "score" | "refs";
 
@@ -81,7 +74,7 @@ export function Dashboard() {
           >
             ‹
           </button>
-          <span className="dash-date-label">{formatDateLabel(date)}</span>
+          <DatePicker value={date} max={todayDateStr()} onChange={setDate} />
           <button
             className="dash-date-btn"
             onClick={() => setDate((d) => shiftDate(d, 1))}
