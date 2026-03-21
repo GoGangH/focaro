@@ -20,6 +20,9 @@ use state::app_state::AppState;
 pub fn run() {
     let mut builder = tauri::Builder::default();
 
+    // opener 플러그인 — URL/파일을 기본 앱으로 열기, 크로스플랫폼 지원
+    builder = builder.plugin(tauri_plugin_opener::init());
+
     // NSPanel 플러그인 — 전체화면 앱 위에 표시되는 메뉴바 드롭다운 구현
     #[cfg(target_os = "macos")]
     {
@@ -125,7 +128,6 @@ pub fn run() {
             commands::activity::get_activity_timeline,
             commands::activity::get_top_sites,
             commands::activity::get_daily_focus_stats,
-            commands::session::open_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

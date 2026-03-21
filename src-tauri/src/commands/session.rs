@@ -294,15 +294,3 @@ pub async fn open_dashboard(app_handle: AppHandle) -> Result<(), AppError> {
     Ok(())
 }
 
-/// macOS `open` 명령으로 URL을 기본 브라우저에서 엶
-#[tauri::command]
-pub async fn open_url(url: String) -> Result<(), AppError> {
-    #[cfg(target_os = "macos")]
-    {
-        std::process::Command::new("open")
-            .arg(&url)
-            .spawn()
-            .map_err(|e| AppError::Internal(e.to_string()))?;
-    }
-    Ok(())
-}

@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import type { Reference } from "../../types/bindings";
 
 interface Props {
@@ -12,7 +12,7 @@ export function SavedReferences({ references }: Props) {
 
   const handleOpen = async (url: string) => {
     try {
-      await invoke("open_url", { url });
+      await openUrl(url);
     } catch {
       // 실패 시 무시
     }
