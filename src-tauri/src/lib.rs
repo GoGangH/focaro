@@ -24,6 +24,9 @@ pub fn run() {
     // opener 플러그인 — URL/파일을 기본 앱으로 열기, 크로스플랫폼 지원
     builder = builder.plugin(tauri_plugin_opener::init());
 
+    // notification 플러그인 — macOS 알림
+    builder = builder.plugin(tauri_plugin_notification::init());
+
     // autostart 플러그인 — 로그인 시 자동 실행
     builder = builder.plugin(tauri_plugin_autostart::init(
         tauri_plugin_autostart::MacosLauncher::LaunchAgent,
@@ -224,6 +227,9 @@ pub fn run() {
             commands::settings::delete_classification_rule,
             commands::settings::open_settings_window,
             commands::settings::open_save_reference_window,
+            commands::goal::get_daily_goal,
+            commands::goal::set_daily_goal,
+            commands::goal::get_goal_progress,
             commands::onboarding::get_onboarding_status,
             commands::onboarding::complete_onboarding,
             commands::onboarding::apply_profession_rules,

@@ -15,6 +15,7 @@ import {
   checkAccessibilityPermission,
 } from "../services/session";
 import { DonutChart } from "../components/Dropdown/DonutChart";
+import { GoalProgress } from "../components/Dropdown/GoalProgress";
 import { QuickOverride } from "../components/Dropdown/QuickOverride";
 import { openSaveReferenceWindow, openSettingsWindow } from "../services/settings";
 
@@ -181,6 +182,9 @@ export function Dropdown() {
           onClose={() => setShowQuickOverride(false)}
         />
       )}
+
+      {/* 오늘 집중 목표 */}
+      {session && <GoalProgress />}
 
       {/* Recent apps list */}
       {session && topApps.length > 0 && (

@@ -52,7 +52,12 @@ function setupIPC({
       case "get_focus_stats": return focusStats;
       case "get_top_apps": return topApps;
       case "get_current_app": return currentApp;
+      case "get_current_url": return null;
+      case "get_current_title": return null;
+      case "check_accessibility_permission": return true;
       case "open_dashboard": return undefined;
+      case "get_goal_progress": return { date: "2026-03-25", target_secs: 7200, actual_focus_secs: 0, progress_pct: 0 };
+      case "get_daily_goal": return { date: "2026-03-25", target_secs: 7200 };
       default: return undefined;
     }
   });
