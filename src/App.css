@@ -1100,3 +1100,291 @@ body {
   color: #ff9f0a;
   line-height: 1.4;
 }
+
+/* ── Onboarding ──────────────────────────────────────────────────────────── */
+
+.onboarding {
+  background: #1c1c1e;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.onboarding__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.onboarding__icon {
+  font-size: 48px;
+}
+
+.onboarding__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.onboarding__desc {
+  font-size: 13px;
+  color: #8e8e93;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.onboarding__features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.onboarding__features li {
+  font-size: 13px;
+  color: #ebebf5cc;
+}
+
+.onboarding__professions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.onboarding__profession {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  color: #fff;
+  text-align: left;
+}
+
+.onboarding__profession:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.onboarding__profession--selected {
+  background: rgba(48, 209, 88, 0.15);
+  border-color: #30d158;
+}
+
+.onboarding__profession-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.onboarding__profession-desc {
+  font-size: 11px;
+  color: #8e8e93;
+}
+
+.onboarding__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.onboarding__btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+
+.onboarding__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.onboarding__btn--primary {
+  background: #30d158;
+  color: #000;
+}
+
+.onboarding__btn--ghost {
+  background: transparent;
+  color: #8e8e93;
+  font-weight: 400;
+}
+
+/* ── Quick Override ───────────────────────────────────────────────────────── */
+
+.quick-override {
+  background: rgba(44, 44, 46, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quick-override__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quick-override__domain {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ebebf5cc;
+}
+
+.quick-override__close {
+  background: none;
+  border: none;
+  color: #8e8e93;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.quick-override__title {
+  font-size: 11px;
+  color: #8e8e93;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-override__mode {
+  display: flex;
+  gap: 6px;
+}
+
+.quick-override__mode-btn {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: #8e8e93;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.quick-override__mode-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.quick-override__cats {
+  display: flex;
+  gap: 6px;
+}
+
+.quick-override__cat-btn {
+  flex: 1;
+  padding: 7px 6px;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border-width: 1px;
+  border-style: solid;
+  transition: background 0.15s;
+}
+
+.quick-override__cat-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── dd-current-app override btn ─────────────────────────────────────────── */
+
+.dd-current-app__override-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #8e8e93;
+  font-size: 10px;
+  border-radius: 5px;
+  padding: 2px 7px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.dd-current-app__override-btn:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+/* ── AutoLaunch Toggle ────────────────────────────────────────────────────── */
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: 12px;
+}
+
+.settings-toggle__label {
+  font-size: 13px;
+  color: #ebebf5;
+}
+
+.settings-toggle__input {
+  display: none;
+}
+
+.settings-toggle__slider {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  background: #3a3a3c;
+  border-radius: 12px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.settings-toggle__slider::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
+}
+
+.settings-toggle__input:checked + .settings-toggle__slider {
+  background: #30d158;
+}
+
+.settings-toggle__input:checked + .settings-toggle__slider::after {
+  transform: translateX(20px);
+}

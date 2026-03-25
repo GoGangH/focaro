@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 pub struct AppSettings {
     pub retention_days: i64,
     pub shortcut_save_ref: String,
+    pub shortcut_session_start: String,
+    pub shortcut_session_end: String,
 }
 
 impl Default for AppSettings {
@@ -11,6 +13,8 @@ impl Default for AppSettings {
         Self {
             retention_days: 30,
             shortcut_save_ref: "CmdOrCtrl+Shift+R".to_string(),
+            shortcut_session_start: "CmdOrCtrl+Shift+S".to_string(),
+            shortcut_session_end: "CmdOrCtrl+Shift+E".to_string(),
         }
     }
 }
@@ -37,11 +41,14 @@ mod tests {
     fn test_app_settings_serde_roundtrip() {
         let s = AppSettings {
             retention_days: 60,
-            shortcut_save_ref: "CmdOrCtrl+Shift+S".to_string(),
+            shortcut_save_ref: "CmdOrCtrl+Shift+R".to_string(),
+            shortcut_session_start: "CmdOrCtrl+Shift+S".to_string(),
+            shortcut_session_end: "CmdOrCtrl+Shift+E".to_string(),
         };
         let json = serde_json::to_string(&s).unwrap();
         let decoded: AppSettings = serde_json::from_str(&json).unwrap();
         assert_eq!(decoded.retention_days, 60);
-        assert_eq!(decoded.shortcut_save_ref, "CmdOrCtrl+Shift+S");
+        assert_eq!(decoded.shortcut_save_ref, "CmdOrCtrl+Shift+R");
+        assert_eq!(decoded.shortcut_session_start, "CmdOrCtrl+Shift+S");
     }
 }

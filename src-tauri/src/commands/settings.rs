@@ -24,8 +24,8 @@ pub async fn update_settings(
     let conn = pool.get().map_err(AppError::from)?;
     crate::services::settings::update_settings(&conn, &settings)?;
 
-    // 단축키 변경 시 재등록
-    crate::register_save_reference_shortcut(&app, &settings.shortcut_save_ref);
+    // 단축키 변경 시 전체 재등록
+    crate::register_all_shortcuts(&app, &settings);
     Ok(())
 }
 
