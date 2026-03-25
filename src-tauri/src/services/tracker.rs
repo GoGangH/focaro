@@ -127,8 +127,14 @@ fn poll_once(
             if duration > 0 {
                 // 이전 활동 저장
                 let conn = db_pool.get().map_err(AppError::from)?;
-                let rules = load_rules(&conn)?;
-                let classification = classifier::classify(prev.domain.as_deref(), &rules);
+                let domain_rules = load_domain_rules(&conn)?;
+                let title_rules = load_title_rules(&conn)?;
+                let classification = classifier::classify(
+                    prev.domain.as_deref(),
+                    prev.title.as_deref(),
+                    &domain_rules,
+                    &title_rules,
+                );
 
                 conn.execute(
                     "INSERT INTO activities (id, session_id, app_name, url, domain, classification, started_at, duration_secs, title)
@@ -153,18 +159,30 @@ fn poll_once(
     Ok(())
 }
 
-fn load_rules(conn: &rusqlite::Connection) -> Result<Vec<(String, String)>, AppError> {
+fn load_domain_rules(conn: &rusqlite::Connection) -> Result<Vec<(String, String)>, AppError> {
     let mut stmt = conn
         .prepare("SELECT domain, category FROM classification_rules")
         .map_err(AppError::from)?;
 
-    let rules = stmt
+    let rows = stmt
         .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
         .map_err(AppError::from)?
         .collect::<Result<Vec<_>, _>>()
         .map_err(AppError::from)?;
+    Ok(rows)
+}
 
-    Ok(rules)
+fn load_title_rules(conn: &rusqlite::Connection) -> Result<Vec<(String, String, String)>, AppError> {
+    let mut stmt = conn
+        .prepare("SELECT domain, keyword, category FROM title_rules")
+        .map_err(AppError::from)?;
+
+    let rows = stmt
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
+        .map_err(AppError::from)?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(AppError::from)?;
+    Ok(rows)
 }
 
 fn classification_to_str(c: &Classification) -> &'static str {

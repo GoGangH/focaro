@@ -49,6 +49,16 @@
         "visible": false,
         "resizable": false,
         "decorations": true
+      },
+      {
+        "label": "onboarding",
+        "title": "focaro 시작하기",
+        "width": 520,
+        "height": 460,
+        "visible": false,
+        "resizable": false,
+        "decorations": true,
+        "center": true
       }
     ],
     "security": {

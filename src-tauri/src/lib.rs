@@ -24,6 +24,12 @@ pub fn run() {
     // opener 플러그인 — URL/파일을 기본 앱으로 열기, 크로스플랫폼 지원
     builder = builder.plugin(tauri_plugin_opener::init());
 
+    // autostart 플러그인 — 로그인 시 자동 실행
+    builder = builder.plugin(tauri_plugin_autostart::init(
+        tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+        None,
+    ));
+
     // global-shortcut 플러그인 — 전역 단축키 등록 (⌘⇧R)
     builder = builder.plugin(tauri_plugin_global_shortcut::Builder::new().build());
 
@@ -79,16 +85,28 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             init_menubar_panel(app.handle(), &dropdown);
 
-            // 전역 단축키 ⌘⇧R → Reference 저장 팝업 열기
-            let shortcut_str = {
+            // 전역 단축키 등록 (⌘⇧R, ⌘⇧S, ⌘⇧E)
+            {
                 let state = app.state::<Mutex<AppState>>();
                 let pool = state.lock().unwrap().db_pool.clone();
                 let conn = pool.get().expect("DB 연결 실패");
-                services::settings::get_settings(&conn)
-                    .map(|s| s.shortcut_save_ref)
-                    .unwrap_or_else(|_| "CmdOrCtrl+Shift+R".to_string())
-            };
-            register_save_reference_shortcut(app.handle(), &shortcut_str);
+                let settings = services::settings::get_settings(&conn)
+                    .unwrap_or_default();
+                register_all_shortcuts(app.handle(), &settings);
+            }
+
+            // 온보딩 완료 여부 체크 — 미완료 시 온보딩 창 표시
+            {
+                let state = app.state::<Mutex<AppState>>();
+                let pool = state.lock().unwrap().db_pool.clone();
+                let conn = pool.get().expect("DB 연결 실패");
+                if !services::onboarding::is_onboarding_completed(&conn) {
+                    if let Some(win) = app.get_webview_window("onboarding") {
+                        let _ = win.show();
+                        let _ = win.set_focus();
+                    }
+                }
+            }
 
             // 설정 창 / Reference 팝업: X로 닫아도 숨기기만 함
             for label in &["settings", "save-reference"] {
@@ -206,6 +224,13 @@ pub fn run() {
             commands::settings::delete_classification_rule,
             commands::settings::open_settings_window,
             commands::settings::open_save_reference_window,
+            commands::onboarding::get_onboarding_status,
+            commands::onboarding::complete_onboarding,
+            commands::onboarding::apply_profession_rules,
+            commands::onboarding::get_title_rules,
+            commands::onboarding::add_title_rule,
+            commands::onboarding::delete_title_rule,
+            commands::onboarding::override_activity_classification,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -316,28 +341,60 @@ fn request_accessibility_permission() {
     }
 }
 
-/// 전역 단축키 등록 (설정 변경 시 재호출)
-pub fn register_save_reference_shortcut(app: &tauri::AppHandle, shortcut_str: &str) {
+/// 전역 단축키 전체 등록 (설정 변경 시 재호출)
+pub fn register_all_shortcuts(app: &tauri::AppHandle, settings: &models::settings::AppSettings) {
     // 기존 단축키 전체 해제 후 재등록
     let _ = app.global_shortcut().unregister_all();
 
-    let Ok(shortcut) = shortcut_str.parse::<Shortcut>() else {
-        eprintln!("단축키 파싱 실패: {shortcut_str}");
-        return;
-    };
-
-    let app_handle = app.clone();
-    let result = app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, event| {
-        if event.state == ShortcutState::Pressed {
-            if let Some(win) = app_handle.get_webview_window("save-reference") {
-                let _ = win.show();
-                let _ = win.set_focus();
+    register_shortcut(app, &settings.shortcut_save_ref, {
+        let app = app.clone();
+        move |event: &tauri_plugin_global_shortcut::ShortcutEvent| {
+            if event.state == ShortcutState::Pressed {
+                if let Some(win) = app.get_webview_window("save-reference") {
+                    let _ = win.show();
+                    let _ = win.set_focus();
+                }
             }
         }
     });
 
-    if let Err(e) = result {
-        eprintln!("단축키 등록 실패: {e}");
+    // 세션 시작 단축키
+    let app_start = app.clone();
+    register_shortcut(app, &settings.shortcut_session_start, move |event| {
+        if event.state == ShortcutState::Pressed {
+            let app = app_start.clone();
+            tauri::async_runtime::spawn(async move {
+                let state = app.state::<std::sync::Mutex<state::app_state::AppState>>();
+                let _ = commands::session::start_session(state, app.clone()).await;
+            });
+        }
+    });
+
+    // 세션 종료 단축키
+    let app_end = app.clone();
+    register_shortcut(app, &settings.shortcut_session_end, move |event| {
+        if event.state == ShortcutState::Pressed {
+            let app = app_end.clone();
+            tauri::async_runtime::spawn(async move {
+                let state = app.state::<std::sync::Mutex<state::app_state::AppState>>();
+                let _ = commands::session::end_session(state).await;
+            });
+        }
+    });
+}
+
+fn register_shortcut<F>(app: &tauri::AppHandle, shortcut_str: &str, handler: F)
+where
+    F: Fn(&tauri_plugin_global_shortcut::ShortcutEvent) + Send + Sync + 'static,
+{
+    let Ok(shortcut) = shortcut_str.parse::<Shortcut>() else {
+        eprintln!("단축키 파싱 실패: {shortcut_str}");
+        return;
+    };
+    if let Err(e) = app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, event| {
+        handler(&event);
+    }) {
+        eprintln!("단축키 등록 실패 ({shortcut_str}): {e}");
     }
 }
 
@@ -368,5 +425,20 @@ fn compute_tray_title(pool: &services::db::DbPool, session_id: &str) -> Option<S
         format!("{:02}:{:02}", minutes, seconds)
     };
 
-    Some(format!("🟢 {}", time_str))
+    // 최근 활동의 classification으로 아이콘 결정
+    let icon = conn
+        .query_row(
+            "SELECT classification FROM activities WHERE session_id = ?1 ORDER BY started_at DESC LIMIT 1",
+            rusqlite::params![session_id],
+            |r| r.get::<_, String>(0),
+        )
+        .ok()
+        .map(|cls| match cls.as_str() {
+            "Focus" => "🟢",
+            "Distraction" => "🔴",
+            _ => "🟡",
+        })
+        .unwrap_or("🟢");
+
+    Some(format!("{} {}", icon, time_str))
 }

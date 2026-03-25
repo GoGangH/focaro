@@ -1,15 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { AppSettings, ClassificationRule } from "../types/bindings";
 
-export interface AppSettings {
-  retention_days: number;
-  shortcut_save_ref: string;
-}
-
-export interface ClassificationRule {
-  id: number;
-  domain: string;
-  category: string;
-}
+export type { AppSettings, ClassificationRule };
 
 export async function getSettings(): Promise<AppSettings> {
   return invoke<AppSettings>("get_settings");

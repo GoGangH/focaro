@@ -21,9 +21,27 @@ pub fn get_settings(conn: &Connection) -> Result<AppSettings, AppError> {
         )
         .unwrap_or_else(|_| "CmdOrCtrl+Shift+R".to_string());
 
+    let shortcut_session_start: String = conn
+        .query_row(
+            "SELECT value FROM settings WHERE key = 'shortcut_session_start'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap_or_else(|_| "CmdOrCtrl+Shift+S".to_string());
+
+    let shortcut_session_end: String = conn
+        .query_row(
+            "SELECT value FROM settings WHERE key = 'shortcut_session_end'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap_or_else(|_| "CmdOrCtrl+Shift+E".to_string());
+
     Ok(AppSettings {
         retention_days,
         shortcut_save_ref,
+        shortcut_session_start,
+        shortcut_session_end,
     })
 }
 
@@ -37,6 +55,18 @@ pub fn update_settings(conn: &Connection, settings: &AppSettings) -> Result<(), 
     conn.execute(
         "INSERT OR REPLACE INTO settings (key, value) VALUES ('shortcut_save_ref', ?1)",
         params![settings.shortcut_save_ref],
+    )
+    .map_err(AppError::from)?;
+
+    conn.execute(
+        "INSERT OR REPLACE INTO settings (key, value) VALUES ('shortcut_session_start', ?1)",
+        params![settings.shortcut_session_start],
+    )
+    .map_err(AppError::from)?;
+
+    conn.execute(
+        "INSERT OR REPLACE INTO settings (key, value) VALUES ('shortcut_session_end', ?1)",
+        params![settings.shortcut_session_end],
     )
     .map_err(AppError::from)?;
 

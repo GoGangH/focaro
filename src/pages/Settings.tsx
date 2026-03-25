@@ -7,6 +7,7 @@ import {
   addClassificationRule,
   deleteClassificationRule,
 } from "../services/settings";
+import { AutoLaunchSettings } from "../components/Settings/AutoLaunchSettings";
 
 const RETENTION_OPTIONS = [
   { label: "7일", value: 7 },
@@ -89,6 +90,9 @@ export function Settings() {
   return (
     <div className="settings-page">
       <h2 className="settings-title">focaro 설정</h2>
+
+      {/* 자동 실행 설정 */}
+      <AutoLaunchSettings />
 
       {/* 단축키 설정 */}
       <section className="settings-section">

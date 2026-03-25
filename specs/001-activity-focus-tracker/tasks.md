@@ -242,28 +242,28 @@ Phase 1~10 전체 구현 완료 (2026-03-21). 이하는 v2 확장 Phase.
 
 ### 테스트 먼저 작성 (Red)
 
-- [ ] TA001 [P] `src-tauri/src/commands/onboarding.rs` 테스트: `get_onboarding_status`, `complete_onboarding`, `apply_profession_rules` 단위 테스트
-- [ ] TA002 [P] `src-tauri/src/services/classifier.rs` 테스트: title_rules 우선 적용, 이중용도 도메인 title 매칭 테스트
-- [ ] TA003 [P] `src/__tests__/pages/Onboarding.test.tsx`: 직업 선택 렌더링, 스킵 동작, 완료 후 커맨드 호출 테스트
-- [ ] TA004 [P] `src/__tests__/components/Dropdown/QuickOverride.test.tsx`: 분류 배지 클릭 → 선택기 표시, "이번만"/"항상" 동작 테스트
+- [x] TA001 [P] `src-tauri/src/commands/onboarding.rs` 테스트: `get_onboarding_status`, `complete_onboarding`, `apply_profession_rules` 단위 테스트
+- [x] TA002 [P] `src-tauri/src/services/classifier.rs` 테스트: title_rules 우선 적용, 이중용도 도메인 title 매칭 테스트
+- [x] TA003 [P] `src/__tests__/pages/Onboarding.test.tsx`: 직업 선택 렌더링, 스킵 동작, 완료 후 커맨드 호출 테스트
+- [x] TA004 [P] `src/__tests__/components/Dropdown/QuickOverride.test.tsx`: 분류 배지 클릭 → 선택기 표시, "이번만"/"항상" 동작 테스트
 
 ### 구현 (Green)
 
-- [ ] TA005 `src-tauri/migrations/V5__title_rules_onboarding.sql`: `title_rules` 테이블 + `onboarding_completed` 기본 settings 값 추가
-- [ ] TA006 [P] `src-tauri/src/services/classifier.rs` 업데이트: title_rules 조회 및 우선 적용 로직 추가 (domain + title keyword contains 매칭)
-- [ ] TA007 [P] `src-tauri/src/commands/onboarding.rs` 구현: `get_onboarding_status()`, `complete_onboarding(profession)`, `apply_profession_rules(profession)`, `add_title_rule(domain, keyword, category)`, `get_title_rules()`, `delete_title_rule(id)`
-- [ ] TA008 [P] `src-tauri/src/services/settings.rs` 업데이트: title_rules CRUD 서비스 함수 추가
-- [ ] TA009 `src-tauri/tauri.conf.json` 업데이트: `onboarding` 창 추가 (`width: 520, height: 460, decorations: true, visible: false`)
-- [ ] TA010 `src-tauri/src/lib.rs` 업데이트: 앱 시작 시 `onboarding_completed` 확인 → 미완료 시 onboarding 창 표시, 새 커맨드 등록
-- [ ] TA011 [P] `src-tauri/src/commands/session.rs` 업데이트: 세션 시작/종료 전역 단축키 커맨드 추가 (`register_session_shortcuts`)
-- [ ] TA012 [P] `src/pages/Onboarding.tsx` 구현: Step 1(Welcome) → Step 2(직업 선택) → Step 3(규칙 미리보기+완료) 3단계 플로우
-- [ ] TA013 [P] `src/components/Dropdown/QuickOverride.tsx` 구현: 분류 배지 클릭 → Focus/Neutral/Distraction 선택 → "이번만"/"항상 이렇게" 선택, title_rule 또는 domain_rule 저장
-- [ ] TA014 `src/pages/Dropdown.tsx` 업데이트: 현재 활동에 QuickOverride 컴포넌트 연결, 트레이 아이콘 상태 업데이트 로직 연결
-- [ ] TA015 [P] `src/services/onboarding.ts`: `getOnboardingStatus()`, `completeOnboarding(profession)`, `addTitleRule()`, `getTitleRules()`, `deleteTitleRule()` 서비스 레이어
-- [ ] TA016 `src/App.tsx` 업데이트: `onboarding` 창 라우팅 추가
-- [ ] TA017 [P] `src-tauri/src/lib.rs` 트레이 아이콘 갱신: 1초 루프에서 현재 분류 상태에 따라 🔵/🟢/🟡/🔴 업데이트
-- [ ] TA018 [P] `src/components/Settings/AutoLaunchSettings.tsx` 구현 (`tauri-plugin-autostart` 사용), Settings.tsx에 통합
-- [ ] TA019 `src/App.css` 업데이트: 온보딩 스타일, QuickOverride 스타일
+- [x] TA005 `src-tauri/migrations/V5__title_rules_onboarding.sql`: `title_rules` 테이블 + `onboarding_completed` 기본 settings 값 추가
+- [x] TA006 [P] `src-tauri/src/services/classifier.rs` 업데이트: title_rules 조회 및 우선 적용 로직 추가 (domain + title keyword contains 매칭)
+- [x] TA007 [P] `src-tauri/src/commands/onboarding.rs` 구현: `get_onboarding_status()`, `complete_onboarding(profession)`, `apply_profession_rules(profession)`, `add_title_rule(domain, keyword, category)`, `get_title_rules()`, `delete_title_rule(id)`
+- [x] TA008 [P] `src-tauri/src/services/settings.rs` 업데이트: title_rules CRUD 서비스 함수 추가
+- [x] TA009 `src-tauri/tauri.conf.json` 업데이트: `onboarding` 창 추가 (`width: 520, height: 460, decorations: true, visible: false`)
+- [x] TA010 `src-tauri/src/lib.rs` 업데이트: 앱 시작 시 `onboarding_completed` 확인 → 미완료 시 onboarding 창 표시, 새 커맨드 등록
+- [x] TA011 [P] `src-tauri/src/commands/session.rs` 업데이트: 세션 시작/종료 전역 단축키 커맨드 추가 (`register_session_shortcuts`)
+- [x] TA012 [P] `src/pages/Onboarding.tsx` 구현: Step 1(Welcome) → Step 2(직업 선택) → Step 3(규칙 미리보기+완료) 3단계 플로우
+- [x] TA013 [P] `src/components/Dropdown/QuickOverride.tsx` 구현: 분류 배지 클릭 → Focus/Neutral/Distraction 선택 → "이번만"/"항상 이렇게" 선택, title_rule 또는 domain_rule 저장
+- [x] TA014 `src/pages/Dropdown.tsx` 업데이트: 현재 활동에 QuickOverride 컴포넌트 연결, 트레이 아이콘 상태 업데이트 로직 연결
+- [x] TA015 [P] `src/services/onboarding.ts`: `getOnboardingStatus()`, `completeOnboarding(profession)`, `addTitleRule()`, `getTitleRules()`, `deleteTitleRule()` 서비스 레이어
+- [x] TA016 `src/App.tsx` 업데이트: `onboarding` 창 라우팅 추가
+- [x] TA017 [P] `src-tauri/src/lib.rs` 트레이 아이콘 갱신: 1초 루프에서 현재 분류 상태에 따라 🔵/🟢/🟡/🔴 업데이트
+- [x] TA018 [P] `src/components/Settings/AutoLaunchSettings.tsx` 구현 (`tauri-plugin-autostart` 사용), Settings.tsx에 통합
+- [x] TA019 `src/App.css` 업데이트: 온보딩 스타일, QuickOverride 스타일
 
 ---
 

@@ -11,9 +11,11 @@ import {
   getTopApps,
   getCurrentApp,
   getCurrentUrl,
+  getCurrentTitle,
   checkAccessibilityPermission,
 } from "../services/session";
 import { DonutChart } from "../components/Dropdown/DonutChart";
+import { QuickOverride } from "../components/Dropdown/QuickOverride";
 import { openSaveReferenceWindow, openSettingsWindow } from "../services/settings";
 
 function formatTimer(totalSecs: number): string {
@@ -39,7 +41,9 @@ export function Dropdown() {
   const [currentApp, setCurrentApp] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
+  const [currentTitle, setCurrentTitle] = useState<string | null>(null);
   const [accessibilityGranted, setAccessibilityGranted] = useState(true);
+  const [showQuickOverride, setShowQuickOverride] = useState(false);
 
   // Recovery + 권한 체크 on mount
   useEffect(() => {
@@ -51,16 +55,18 @@ export function Dropdown() {
 
   // Poll stats every 5s when session active
   const refreshStats = useCallback(async (sid: string) => {
-    const [s, apps, app, url] = await Promise.all([
+    const [s, apps, app, url, title] = await Promise.all([
       getFocusStats(sid),
       getTopApps(sid),
       getCurrentApp(),
       getCurrentUrl(),
+      getCurrentTitle(),
     ]);
     setStats(s);
     setTopApps(apps);
     setCurrentApp(app);
     setCurrentUrl(url);
+    setCurrentTitle(title);
     setElapsed(s.total_secs);
   }, []);
 
@@ -153,8 +159,27 @@ export function Dropdown() {
           <div className="dd-current-app">
             <div className="dd-current-app__label">현재 앱</div>
             <div className="dd-current-app__name">{currentApp ?? "—"}</div>
+            {currentUrl && (
+              <button
+                className="dd-current-app__override-btn"
+                onClick={() => setShowQuickOverride((v) => !v)}
+                title="분류 변경"
+              >
+                분류 변경
+              </button>
+            )}
           </div>
         </div>
+      )}
+
+      {/* Quick override panel */}
+      {session && showQuickOverride && currentUrl && (
+        <QuickOverride
+          domain={currentUrl ? new URL(currentUrl).hostname.replace(/^www\./, "") : null}
+          title={currentTitle}
+          currentCategory={topApps[0]?.classification ?? "Neutral"}
+          onClose={() => setShowQuickOverride(false)}
+        />
       )}
 
       {/* Recent apps list */}
