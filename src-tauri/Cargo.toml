@@ -32,6 +32,7 @@ refinery = { version = "0.8", features = ["rusqlite"] }
 objc2 = "0.5"
 objc2-foundation = { version = "0.2", features = ["NSString", "NSArray"] }
 objc2-app-kit = { version = "0.2", features = ["NSWorkspace", "NSRunningApplication"] }
+tauri-plugin-notification = "2"
 
 # macOS NSPanel — 전체화면 위에 표시되는 메뉴바 드롭다운 (moa 동일 방식)
 [target.'cfg(target_os = "macos")'.dependencies]

@@ -1388,3 +1388,98 @@ body {
 .settings-toggle__input:checked + .settings-toggle__slider::after {
   transform: translateX(20px);
 }
+
+/* ── Goal Progress ────────────────────────────────────────────────────────── */
+
+.goal-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.goal-progress__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.goal-progress__label {
+  font-size: 11px;
+  color: #8e8e93;
+  font-weight: 500;
+}
+
+.goal-progress__edit-btn {
+  background: none;
+  border: none;
+  color: #0a84ff;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.goal-progress__bar-wrap {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.goal-progress__bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.goal-progress__info {
+  display: flex;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.goal-progress__target {
+  color: #636366;
+  font-weight: 400;
+}
+
+.goal-progress__edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.goal-progress__presets {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.goal-progress__preset {
+  flex: 1;
+  padding: 4px 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8e8e93;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.goal-progress__preset.active {
+  background: rgba(10, 132, 255, 0.2);
+  border-color: #0a84ff;
+  color: #0a84ff;
+}
+
+.goal-progress__save-btn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: #0a84ff;
+  border: none;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
