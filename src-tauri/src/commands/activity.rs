@@ -109,6 +109,50 @@ pub async fn get_session_events(
         .collect())
 }
 
+/// 주간 요일별 집중 통계 (start_date: 해당 주 월요일 YYYY-MM-DD)
+#[derive(Debug, serde::Serialize)]
+pub struct WeeklyDayStat {
+    pub date: String,
+    pub focus_secs: i64,
+    pub total_secs: i64,
+}
+
+#[tauri::command]
+pub async fn get_weekly_report(
+    start_date: String,
+    state: State<'_, Mutex<AppState>>,
+) -> Result<Vec<WeeklyDayStat>, AppError> {
+    let pool = get_pool(&state);
+    let rows = activity_svc::query_weekly_report(&pool, &start_date)?;
+    Ok(rows.into_iter().map(|r| WeeklyDayStat {
+        date: r.date,
+        focus_secs: r.focus_secs,
+        total_secs: r.total_secs,
+    }).collect())
+}
+
+/// 최근 N일 집중도 트렌드
+#[derive(Debug, serde::Serialize)]
+pub struct TrendPoint {
+    pub date: String,
+    pub focus_pct: f64,
+    pub focus_secs: i64,
+}
+
+#[tauri::command]
+pub async fn get_trend(
+    days: i64,
+    state: State<'_, Mutex<AppState>>,
+) -> Result<Vec<TrendPoint>, AppError> {
+    let pool = get_pool(&state);
+    let rows = activity_svc::query_trend(&pool, days)?;
+    Ok(rows.into_iter().map(|r| TrendPoint {
+        date: r.date,
+        focus_pct: r.focus_pct,
+        focus_secs: r.focus_secs,
+    }).collect())
+}
+
 /// 특정 날짜(UTC)의 Focus/Neutral/Distraction 일별 통계
 #[tauri::command]
 pub async fn get_daily_focus_stats(

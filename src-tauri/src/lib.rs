@@ -220,6 +220,8 @@ pub fn run() {
             commands::activity::get_top_sites,
             commands::activity::get_daily_focus_stats,
             commands::activity::get_session_events,
+            commands::activity::get_weekly_report,
+            commands::activity::get_trend,
             commands::settings::get_settings,
             commands::settings::update_settings,
             commands::settings::get_classification_rules,

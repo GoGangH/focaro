@@ -271,11 +271,11 @@ Phase 1~10 전체 구현 완료 (2026-03-21). 이하는 v2 확장 Phase.
 
 **목표**: 사용자가 의도를 갖고 세션을 운영할 수 있도록
 
-- [ ] TB001 [P] `src-tauri/migrations/V6__goals.sql`: `session_goals` 테이블 추가 (`target_secs`, `date`)
-- [ ] TB002 [P] `src-tauri/src/commands/goal.rs`: `set_daily_goal(secs)`, `get_daily_goal()`, `get_goal_progress(date)` 커맨드
-- [ ] TB003 [P] `src/components/Dropdown/GoalProgress.tsx`: 목표 시간 설정 + 달성률 프로그레스 바
-- [ ] TB004 [P] `src-tauri/src/services/notification.rs`: `send_notification(title, body)` — macOS 알림 (`tauri-plugin-notification`)
-- [ ] TB005 [P] 세션 루프에 알림 로직 추가: 집중도 임계값(기본 40%) 이하 10분 지속 시 알림, 목표 달성 시 알림
+- [X] TB001 [P] `src-tauri/migrations/V6__goals.sql`: `session_goals` 테이블 추가 (`target_secs`, `date`)
+- [X] TB002 [P] `src-tauri/src/commands/goal.rs`: `set_daily_goal(secs)`, `get_daily_goal()`, `get_goal_progress(date)` 커맨드
+- [X] TB003 [P] `src/components/Dropdown/GoalProgress.tsx`: 목표 시간 설정 + 달성률 프로그레스 바
+- [X] TB004 [P] `src-tauri/src/services/notification.rs`: `send_notification(title, body)` — macOS 알림 (`tauri-plugin-notification`)
+- [X] TB005 [P] 세션 루프에 알림 로직 추가: 집중도 임계값(기본 40%) 이하 10분 지속 시 알림, 목표 달성 시 알림
 
 ---
 
@@ -283,12 +283,12 @@ Phase 1~10 전체 구현 완료 (2026-03-21). 이하는 v2 확장 Phase.
 
 **목표**: 데이터 기반 인사이트 제공
 
-- [ ] TC001 [P] `src-tauri/src/services/activity.rs` 추가: `query_weekly_report(start_date)`, `query_trend(days)` 쿼리
-- [ ] TC002 [P] `src/components/Dashboard/WeeklyReport.tsx`: 요일별 Focus 시간 바 차트 (이번 주 vs 지난 주)
-- [ ] TC003 [P] `src/components/Dashboard/TrendChart.tsx`: 최근 30일 Focus % 꺾은선 그래프
-- [ ] TC004 [P] `src/components/Dashboard/HabitInsights.tsx`: 요일/시간대별 패턴 분석 텍스트 요약
-- [ ] TC005 [P] `src/components/Dashboard/SavedReferences.tsx` 업데이트: 검색 입력창 + 태그 클릭 필터
-- [ ] TC006 `src/pages/Dashboard.tsx` 업데이트: 주간/트렌드 탭 추가, 인사이트 섹션 추가
+- [X] TC001 [P] `src-tauri/src/services/activity.rs` 추가: `query_weekly_report(start_date)`, `query_trend(days)` 쿼리
+- [X] TC002 [P] `src/components/Dashboard/WeeklyReport.tsx`: 요일별 Focus 시간 바 차트 (이번 주 vs 지난 주)
+- [X] TC003 [P] `src/components/Dashboard/TrendChart.tsx`: 최근 30일 Focus % 꺾은선 그래프
+- [X] TC004 [P] `src/components/Dashboard/HabitInsights.tsx`: 요일/시간대별 패턴 분석 텍스트 요약
+- [X] TC005 [P] `src/components/Dashboard/SavedReferences.tsx` 업데이트: 검색 입력창 + 태그 클릭 필터
+- [X] TC006 `src/pages/Dashboard.tsx` 업데이트: 주간/트렌드 탭 추가, 인사이트 섹션 추가
 
 ---
 
@@ -299,6 +299,51 @@ Phase 1~10 전체 구현 완료 (2026-03-21). 이하는 v2 확장 Phase.
 - [ ] TD001 [P] `src-tauri/src/commands/export.rs`: `export_data(start_date, end_date, format)` — CSV/JSON 생성 후 파일 저장 다이얼로그
 - [ ] TD002 [P] `src/components/Dashboard/ExportButton.tsx`: 날짜 범위 선택 + 형식 선택 (CSV/JSON) + 내보내기 버튼
 - [ ] TD003 `src/pages/Dashboard.tsx` 업데이트: ExportButton 추가
+
+---
+
+## Phase E: 앱 이름 기반 분류 규칙 (Issue #29)
+
+**목표**: 웹사이트뿐 아니라 네이티브 앱(Xcode, Slack 등)도 Focus/Neutral/Distraction으로 분류 가능하게 함
+
+**분류 우선순위 (변경 후)**:
+```
+title_rules (domain+keyword) → domain_rules (domain) → app_rules (app_name) → 내장 기본값 → Neutral
+```
+
+### 백엔드
+
+- [ ] TE001 `src-tauri/migrations/V7__app_rules.sql`: `app_rules` 테이블 생성
+  ```sql
+  CREATE TABLE IF NOT EXISTS app_rules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    app_name TEXT NOT NULL UNIQUE,
+    category TEXT NOT NULL CHECK (category IN ('Focus', 'Neutral', 'Distraction'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_app_rules_app_name ON app_rules(app_name);
+  ```
+- [ ] TE002 [P] `src-tauri/src/services/classifier.rs` 업데이트: `classify` 함수 시그니처에 `app_rules: &[(String, String)]` 파라미터 추가, 우선순위 적용
+  - `title_rules` → `domain_rules` → `app_rules` → 내장 기본값 → Neutral
+  - TDD: 테스트 먼저 작성 (app_rule 매칭, 우선순위 검증)
+- [ ] TE003 [P] `src-tauri/src/services/activity.rs`: `load_app_rules(pool)` 함수 추가, `poll_once`에서 호출
+- [ ] TE004 [P] `src-tauri/src/commands/activity.rs`: `get_tracked_apps` 커맨드 추가
+  ```sql
+  SELECT DISTINCT app_name FROM activities ORDER BY app_name ASC
+  ```
+- [ ] TE005 [P] `src-tauri/src/commands/settings.rs`: `get_app_rules`, `add_app_rule(app_name, category)`, `delete_app_rule(id)` 커맨드 추가
+- [ ] TE006 `src-tauri/src/lib.rs`: TE005 커맨드 `invoke_handler`에 등록
+
+### 프론트엔드
+
+- [ ] TE007 [P] `src/types/bindings.ts`: `AppRule { id: number; app_name: string; category: string }` 인터페이스 추가
+- [ ] TE008 [P] `src/services/settings.ts`: `getAppRules`, `addAppRule`, `deleteAppRule` 추가
+- [ ] TE009 [P] `src/services/activity.ts`: `getTrackedApps(): Promise<string[]>` 추가
+- [ ] TE010 `src/components/Settings/AppRuleSettings.tsx`: 앱 규칙 설정 컴포넌트 구현
+  - **추적된 앱 목록 선택**: `getTrackedApps()`로 조회한 앱 이름 드롭다운 (이미 규칙 있는 항목 비활성화)
+  - **직접 입력**: 텍스트 입력창으로 앱 이름 수동 입력
+  - Focus / Neutral / Distraction 선택 드롭다운
+  - 추가된 규칙 목록 표시 + 삭제 버튼
+- [ ] TE011 `src/pages/Settings.tsx`: `<AppRuleSettings />` 섹션 추가 (도메인 규칙 섹션 아래)
 
 ---
 

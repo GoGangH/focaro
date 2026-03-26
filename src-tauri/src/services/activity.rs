@@ -184,3 +184,75 @@ pub fn query_daily_focus_stats(pool: &DbPool, date: &str) -> Result<DailyFocusSt
     let total_secs = focus_secs + neutral_secs + distraction_secs;
     Ok(DailyFocusStats { total_secs, focus_secs, neutral_secs, distraction_secs })
 }
+
+pub struct WeeklyDayStat {
+    pub date: String,       // YYYY-MM-DD
+    pub focus_secs: i64,
+    pub total_secs: i64,
+}
+
+/// 특정 주(월~일)의 요일별 집중 통계 조회
+/// start_date: 해당 주 월요일 (YYYY-MM-DD)
+pub fn query_weekly_report(pool: &DbPool, start_date: &str) -> Result<Vec<WeeklyDayStat>, AppError> {
+    let conn = pool.get().map_err(AppError::from)?;
+    let mut stmt = conn.prepare(
+        "SELECT date(s.started_at, 'unixepoch') as day,
+                SUM(CASE WHEN a.classification = 'Focus' THEN a.duration_secs ELSE 0 END) as focus_secs,
+                SUM(a.duration_secs) as total_secs
+         FROM activities a
+         JOIN sessions s ON a.session_id = s.id
+         WHERE day >= ?1 AND day < date(?1, '+7 days')
+           AND a.duration_secs IS NOT NULL
+         GROUP BY day
+         ORDER BY day ASC"
+    ).map_err(AppError::from)?;
+
+    let rows = stmt.query_map(rusqlite::params![start_date], |r| {
+        Ok(WeeklyDayStat {
+            date: r.get(0)?,
+            focus_secs: r.get(1)?,
+            total_secs: r.get(2)?,
+        })
+    })
+    .map_err(AppError::from)?
+    .filter_map(|r| r.ok())
+    .collect();
+
+    Ok(rows)
+}
+
+pub struct TrendPoint {
+    pub date: String,
+    pub focus_pct: f64,
+    pub focus_secs: i64,
+}
+
+/// 최근 N일간 일별 집중도 트렌드
+pub fn query_trend(pool: &DbPool, days: i64) -> Result<Vec<TrendPoint>, AppError> {
+    let conn = pool.get().map_err(AppError::from)?;
+    let mut stmt = conn.prepare(
+        "SELECT date(s.started_at, 'unixepoch') as day,
+                CAST(SUM(CASE WHEN a.classification = 'Focus' THEN a.duration_secs ELSE 0 END) AS REAL)
+                  / NULLIF(SUM(a.duration_secs), 0) * 100.0 as focus_pct,
+                SUM(CASE WHEN a.classification = 'Focus' THEN a.duration_secs ELSE 0 END) as focus_secs
+         FROM activities a
+         JOIN sessions s ON a.session_id = s.id
+         WHERE day >= date('now', '-' || ?1 || ' days')
+           AND a.duration_secs IS NOT NULL
+         GROUP BY day
+         ORDER BY day ASC"
+    ).map_err(AppError::from)?;
+
+    let rows = stmt.query_map(rusqlite::params![days], |r| {
+        Ok(TrendPoint {
+            date: r.get(0)?,
+            focus_pct: r.get::<_, Option<f64>>(1)?.unwrap_or(0.0),
+            focus_secs: r.get(2)?,
+        })
+    })
+    .map_err(AppError::from)?
+    .filter_map(|r| r.ok())
+    .collect();
+
+    Ok(rows)
+}

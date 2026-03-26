@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { Reference } from "../../types/bindings";
 import { deleteReference, updateReference } from "../../services/reference";
@@ -26,6 +26,27 @@ interface EditState {
 export function SavedReferences({ references, onRefresh }: Props) {
   const [editing, setEditing] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState("");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const ref of references) {
+      for (const tag of ref.tags) set.add(tag);
+    }
+    return Array.from(set).sort();
+  }, [references]);
+
+  const filtered = useMemo(() => {
+    return references.filter((ref) => {
+      const matchesSearch =
+        !search ||
+        ref.title.toLowerCase().includes(search.toLowerCase()) ||
+        ref.url.toLowerCase().includes(search.toLowerCase());
+      const matchesTag = !activeTag || ref.tags.includes(activeTag);
+      return matchesSearch && matchesTag;
+    });
+  }, [references, search, activeTag]);
 
   const handleOpen = async (url: string) => {
     try {
@@ -69,7 +90,40 @@ export function SavedReferences({ references, onRefresh }: Props) {
 
   return (
     <div className="saved-refs">
-      {references.map((ref) => {
+      <div className="saved-refs__filters">
+        <input
+          className="saved-refs__search"
+          type="text"
+          placeholder="제목 또는 URL 검색..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        {allTags.length > 0 && (
+          <div className="saved-refs__tags">
+            <button
+              className={`saved-ref-tag saved-ref-tag--filter${activeTag === null ? " active" : ""}`}
+              onClick={() => setActiveTag(null)}
+            >
+              전체
+            </button>
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                className={`saved-ref-tag saved-ref-tag--filter${activeTag === tag ? " active" : ""}`}
+                onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {filtered.length === 0 && (
+        <p className="dash-empty">검색 결과 없음</p>
+      )}
+
+      {filtered.map((ref) => {
         const isEditing = editing?.id === ref.id;
         return (
           <div key={ref.id} className="saved-ref-item">
