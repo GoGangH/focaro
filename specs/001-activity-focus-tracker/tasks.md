@@ -271,11 +271,11 @@ Phase 1~10 전체 구현 완료 (2026-03-21). 이하는 v2 확장 Phase.
 
 **목표**: 사용자가 의도를 갖고 세션을 운영할 수 있도록
 
-- [ ] TB001 [P] `src-tauri/migrations/V6__goals.sql`: `session_goals` 테이블 추가 (`target_secs`, `date`)
-- [ ] TB002 [P] `src-tauri/src/commands/goal.rs`: `set_daily_goal(secs)`, `get_daily_goal()`, `get_goal_progress(date)` 커맨드
-- [ ] TB003 [P] `src/components/Dropdown/GoalProgress.tsx`: 목표 시간 설정 + 달성률 프로그레스 바
-- [ ] TB004 [P] `src-tauri/src/services/notification.rs`: `send_notification(title, body)` — macOS 알림 (`tauri-plugin-notification`)
-- [ ] TB005 [P] 세션 루프에 알림 로직 추가: 집중도 임계값(기본 40%) 이하 10분 지속 시 알림, 목표 달성 시 알림
+- [X] TB001 [P] `src-tauri/migrations/V6__goals.sql`: `session_goals` 테이블 추가 (`target_secs`, `date`)
+- [X] TB002 [P] `src-tauri/src/commands/goal.rs`: `set_daily_goal(secs)`, `get_daily_goal()`, `get_goal_progress(date)` 커맨드
+- [X] TB003 [P] `src/components/Dropdown/GoalProgress.tsx`: 목표 시간 설정 + 달성률 프로그레스 바
+- [X] TB004 [P] `src-tauri/src/services/notification.rs`: `send_notification(title, body)` — macOS 알림 (`tauri-plugin-notification`)
+- [X] TB005 [P] 세션 루프에 알림 로직 추가: 집중도 임계값(기본 40%) 이하 10분 지속 시 알림, 목표 달성 시 알림
 
 ---
 
@@ -283,12 +283,12 @@ Phase 1~10 전체 구현 완료 (2026-03-21). 이하는 v2 확장 Phase.
 
 **목표**: 데이터 기반 인사이트 제공
 
-- [ ] TC001 [P] `src-tauri/src/services/activity.rs` 추가: `query_weekly_report(start_date)`, `query_trend(days)` 쿼리
-- [ ] TC002 [P] `src/components/Dashboard/WeeklyReport.tsx`: 요일별 Focus 시간 바 차트 (이번 주 vs 지난 주)
-- [ ] TC003 [P] `src/components/Dashboard/TrendChart.tsx`: 최근 30일 Focus % 꺾은선 그래프
-- [ ] TC004 [P] `src/components/Dashboard/HabitInsights.tsx`: 요일/시간대별 패턴 분석 텍스트 요약
-- [ ] TC005 [P] `src/components/Dashboard/SavedReferences.tsx` 업데이트: 검색 입력창 + 태그 클릭 필터
-- [ ] TC006 `src/pages/Dashboard.tsx` 업데이트: 주간/트렌드 탭 추가, 인사이트 섹션 추가
+- [X] TC001 [P] `src-tauri/src/services/activity.rs` 추가: `query_weekly_report(start_date)`, `query_trend(days)` 쿼리
+- [X] TC002 [P] `src/components/Dashboard/WeeklyReport.tsx`: 요일별 Focus 시간 바 차트 (이번 주 vs 지난 주)
+- [X] TC003 [P] `src/components/Dashboard/TrendChart.tsx`: 최근 30일 Focus % 꺾은선 그래프
+- [X] TC004 [P] `src/components/Dashboard/HabitInsights.tsx`: 요일/시간대별 패턴 분석 텍스트 요약
+- [X] TC005 [P] `src/components/Dashboard/SavedReferences.tsx` 업데이트: 검색 입력창 + 태그 클릭 필터
+- [X] TC006 `src/pages/Dashboard.tsx` 업데이트: 주간/트렌드 탭 추가, 인사이트 섹션 추가
 
 ---
 
