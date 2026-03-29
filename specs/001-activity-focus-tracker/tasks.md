@@ -330,6 +330,91 @@ title_rules (domain+keyword) → domain_rules (domain) → app_rules (app_name) 
 
 ---
 
+## Phase F: 타이틀 규칙 설정 UI (Issue #32)
+
+**목표**: `title_rules` 테이블이 DB에 존재하지만 설정 UI가 없어 Quick Override로만 추가 가능. 설정 페이지에서 직접 관리(조회/삭제)할 수 있도록 구현.
+
+### 백엔드
+
+- [ ] TF001 [P] `src-tauri/src/commands/settings.rs` + `services/settings.rs`: `get_title_rules`, `delete_title_rule` 커맨드 추가
+- [ ] TF002 `src-tauri/src/lib.rs`: 커맨드 등록
+
+### 프론트엔드
+
+- [ ] TF003 [P] `src/types/bindings.ts`: `TitleRule` 인터페이스 추가 (`id`, `domain`, `keyword`, `category`)
+- [ ] TF004 [P] `src/services/settings.ts`: `getTitleRules`, `deleteTitleRule` 추가
+- [ ] TF005 `src/components/Settings/TitleRuleSettings.tsx`: 타이틀 규칙 목록(도메인+키워드+분류) + 삭제 버튼
+- [ ] TF006 `src/pages/Settings.tsx`: `<TitleRuleSettings />` 섹션 추가
+
+---
+
+## Phase G: 시간대별 히트맵 및 요일 패턴 시각화 (Issue #33)
+
+**목표**: 대시보드에 시간대별·요일별 집중도 패턴을 시각화하여 언제 가장 집중하는지 파악 가능하게 함.
+
+### 백엔드
+
+- [ ] TG001 `src-tauri/src/commands/activity.rs`: `get_hourly_heatmap(days: u32)` 커맨드 — 시간(0~23) × 요일(0~6) 별 평균 Focus % 반환
+- [ ] TG002 `src-tauri/src/commands/activity.rs`: `get_weekday_stats(days: u32)` 커맨드 — 요일별 평균 Focus 시간(분) 반환
+- [ ] TG003 `src-tauri/src/lib.rs`: 커맨드 등록
+
+### 프론트엔드
+
+- [ ] TG004 [P] `src/types/bindings.ts`: `HeatmapCell` (`hour`, `weekday`, `focus_pct`), `WeekdayStat` (`weekday`, `avg_focus_mins`) 인터페이스 추가
+- [ ] TG005 [P] `src/services/activity.ts`: `getHourlyHeatmap`, `getWeekdayStats` 추가
+- [ ] TG006 `src/components/Dashboard/PatternView.tsx`: 히트맵 그리드(24×7) + 요일별 바 차트 구현
+- [ ] TG007 `src/pages/Dashboard.tsx`: `패턴` 탭 추가 및 `PatternView` 연결
+
+---
+
+## Phase H: 세션 목표 달성 히스토리 (Issue #34)
+
+**목표**: 매일 목표 달성 여부를 기록하고 대시보드에서 스트릭 및 달성 캘린더를 확인할 수 있도록 함.
+
+### 백엔드
+
+- [ ] TH001 `src-tauri/migrations/V8__goal_history.sql`: `goal_history` 테이블 생성 (`date TEXT PK`, `target_secs INT`, `actual_secs INT`, `achieved BOOL`)
+- [ ] TH002 `src-tauri/src/services/goal.rs`: `record_daily_goal_result(date, target_secs, actual_secs)` 함수 추가
+- [ ] TH003 `src-tauri/src/commands/session.rs`: 세션 종료 시 `record_daily_goal_result` 호출
+- [ ] TH004 [P] `src-tauri/src/commands/activity.rs`: `get_goal_history(days: u32)` 커맨드 — 날짜별 달성 여부 목록 반환
+- [ ] TH005 `src-tauri/src/lib.rs`: 커맨드 등록
+
+### 프론트엔드
+
+- [ ] TH006 [P] `src/types/bindings.ts`: `GoalHistoryEntry` (`date`, `target_secs`, `actual_secs`, `achieved`) 인터페이스 추가
+- [ ] TH007 [P] `src/services/activity.ts`: `getGoalHistory(days)` 추가
+- [ ] TH008 `src/components/Dashboard/GoalHistory.tsx`: 최근 30일 달성 캘린더 + 연속 달성 스트릭 표시
+- [ ] TH009 `src/pages/Dashboard.tsx`: Focus Score 탭에 `GoalHistory` 컴포넌트 추가
+- [ ] TH010 `src/components/Dropdown/GoalProgress.tsx`: 연속 달성 일수 표시 추가
+
+---
+
+## Phase I: UI 폴리싱 및 안정성 개선 (Issue #35)
+
+**목표**: 전반적인 UI 완성도 향상 및 알려진 UX 이슈 수정.
+
+### 대시보드
+
+- [ ] TI001 `src/pages/Dashboard.tsx` + `src/App.css`: 탭 콘텐츠 로딩 시 스켈레톤 UI (현재 빈 화면)
+- [ ] TI002 각 탭 컴포넌트: 데이터 없을 때 통일된 빈 상태 메시지 및 아이콘
+- [ ] TI003 `src/pages/Dashboard.tsx`: 날짜 네비게이션 키보드 단축키 (← →)
+
+### 드롭다운
+
+- [ ] TI004 `src/pages/Dropdown.tsx` + `src/App.css`: 세션 없을 때 오늘 누적 집중 시간 간략 표시
+
+### 설정
+
+- [ ] TI005 `src/pages/Settings.tsx` + `src/App.css`: 저장 성공/실패 토스트 알림 컴포넌트
+- [ ] TI006 `src/pages/Settings.tsx`: 도메인/앱 규칙 추가 시 중복 체크 및 에러 피드백
+
+### 성능
+
+- [ ] TI007 `src/pages/Dashboard.tsx`: 같은 탭 재클릭 시 리페치 방지 (이미 로딩 중이면 skip)
+- [ ] TI008 `src/components/Settings/*.tsx`: 설정 창 데이터 마운트 시 1회만 로드, 불필요한 재요청 제거
+
+---
+
 ## 의존성 및 실행 순서
 
 ### Phase 의존성
