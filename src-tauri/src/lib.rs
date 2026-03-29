@@ -246,6 +246,7 @@ pub fn run() {
             commands::settings::delete_app_rule,
             commands::activity::get_hourly_heatmap,
             commands::activity::get_weekday_stats,
+            commands::activity::get_goal_history,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

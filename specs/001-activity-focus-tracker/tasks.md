@@ -373,19 +373,19 @@ title_rules (domain+keyword) → domain_rules (domain) → app_rules (app_name) 
 
 ### 백엔드
 
-- [ ] TH001 `src-tauri/migrations/V8__goal_history.sql`: `goal_history` 테이블 생성 (`date TEXT PK`, `target_secs INT`, `actual_secs INT`, `achieved BOOL`)
-- [ ] TH002 `src-tauri/src/services/goal.rs`: `record_daily_goal_result(date, target_secs, actual_secs)` 함수 추가
-- [ ] TH003 `src-tauri/src/commands/session.rs`: 세션 종료 시 `record_daily_goal_result` 호출
-- [ ] TH004 [P] `src-tauri/src/commands/activity.rs`: `get_goal_history(days: u32)` 커맨드 — 날짜별 달성 여부 목록 반환
-- [ ] TH005 `src-tauri/src/lib.rs`: 커맨드 등록
+- [x] TH001 `src-tauri/migrations/V8__goal_history.sql`: `goal_history` 테이블 생성 (`date TEXT PK`, `target_secs INT`, `actual_secs INT`, `achieved BOOL`)
+- [x] TH002 `src-tauri/src/services/goal.rs`: `record_daily_goal_result(date, target_secs, actual_secs)` 함수 추가
+- [x] TH003 `src-tauri/src/commands/session.rs`: 세션 종료 시 `record_daily_goal_result` 호출
+- [x] TH004 [P] `src-tauri/src/commands/activity.rs`: `get_goal_history(days: u32)` 커맨드 — 날짜별 달성 여부 목록 반환
+- [x] TH005 `src-tauri/src/lib.rs`: 커맨드 등록
 
 ### 프론트엔드
 
-- [ ] TH006 [P] `src/types/bindings.ts`: `GoalHistoryEntry` (`date`, `target_secs`, `actual_secs`, `achieved`) 인터페이스 추가
-- [ ] TH007 [P] `src/services/activity.ts`: `getGoalHistory(days)` 추가
-- [ ] TH008 `src/components/Dashboard/GoalHistory.tsx`: 최근 30일 달성 캘린더 + 연속 달성 스트릭 표시
-- [ ] TH009 `src/pages/Dashboard.tsx`: Focus Score 탭에 `GoalHistory` 컴포넌트 추가
-- [ ] TH010 `src/components/Dropdown/GoalProgress.tsx`: 연속 달성 일수 표시 추가
+- [x] TH006 [P] `src/types/bindings.ts`: `GoalHistoryEntry` (`date`, `target_secs`, `actual_secs`, `achieved`) 인터페이스 추가
+- [x] TH007 [P] `src/services/activity.ts`: `getGoalHistory(days)` 추가
+- [x] TH008 `src/components/Dashboard/GoalHistory.tsx`: 최근 30일 달성 캘린더 + 연속 달성 스트릭 표시
+- [x] TH009 `src/pages/Dashboard.tsx`: Focus Score 탭에 `GoalHistory` 컴포넌트 추가
+- [x] TH010 `src/components/Dropdown/GoalProgress.tsx`: 연속 달성 일수 표시 추가
 
 ---
 

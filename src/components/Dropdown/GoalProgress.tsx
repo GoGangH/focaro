@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getDailyGoal, getGoalProgress, setDailyGoal, type GoalProgress as GoalProgressData } from "../../services/goal";
+import { getGoalHistory } from "../../services/activity";
 
 const PRESET_HOURS = [1, 2, 3, 4, 6];
 
@@ -14,10 +15,20 @@ export function GoalProgress() {
   const [progress, setProgress] = useState<GoalProgressData | null>(null);
   const [editing, setEditing] = useState(false);
   const [selectedHours, setSelectedHours] = useState(2);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     getGoalProgress().then(setProgress);
     getDailyGoal().then((g) => setSelectedHours(Math.round(g.target_secs / 3600)));
+    getGoalHistory(30).then((hist) => {
+      const sorted = [...hist].sort((a, b) => b.date.localeCompare(a.date));
+      let s = 0;
+      for (const e of sorted) {
+        if (e.achieved) s++;
+        else break;
+      }
+      setStreak(s);
+    }).catch(() => {});
   }, []);
 
   const handleSave = async () => {
@@ -35,7 +46,14 @@ export function GoalProgress() {
   return (
     <div className="goal-progress">
       <div className="goal-progress__header">
-        <span className="goal-progress__label">오늘 목표</span>
+        <span className="goal-progress__label">
+          오늘 목표
+          {streak > 0 && (
+            <span className="goal-progress__streak" title={`${streak}일 연속 달성`}>
+              {" "}🔥 {streak}
+            </span>
+          )}
+        </span>
         <button
           className="goal-progress__edit-btn"
           onClick={() => setEditing((v) => !v)}

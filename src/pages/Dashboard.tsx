@@ -13,6 +13,7 @@ import { TrendChart } from "../components/Dashboard/TrendChart";
 import { HabitInsights } from "../components/Dashboard/HabitInsights";
 import { ExportButton } from "../components/Dashboard/ExportButton";
 import { PatternView } from "../components/Dashboard/PatternView";
+import { GoalHistory } from "../components/Dashboard/GoalHistory";
 
 function todayDateStr(): string {
   return new Date().toISOString().split("T")[0];
@@ -163,7 +164,12 @@ export function Dashboard() {
             <>
               {tab === "timeline" && <ActivityTimeline activities={activities} sessionEvents={sessionEvents} />}
               {tab === "sites" && <TopSites sites={sites} />}
-              {tab === "score" && <FocusScore metrics={metrics} />}
+              {tab === "score" && (
+                <div className="score-section">
+                  <FocusScore metrics={metrics} />
+                  <GoalHistory />
+                </div>
+              )}
               {tab === "weekly" && (
                 <div className="weekly-section">
                   <div className="weekly-section__block">
