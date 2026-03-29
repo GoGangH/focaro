@@ -16,3 +16,7 @@ export async function getDailyFocusStats(date: string): Promise<FocusMetrics> {
 export async function getSessionEvents(date: string): Promise<SessionEvent[]> {
   return invoke<SessionEvent[]>("get_session_events", { date });
 }
+
+export async function getTrackedApps(): Promise<string[]> {
+  return invoke<string[]>("get_tracked_apps");
+}

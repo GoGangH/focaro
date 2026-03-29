@@ -3,6 +3,7 @@ use tauri::State;
 
 use crate::errors::AppError;
 use crate::services::{activity as activity_svc, db::DbPool};
+use rusqlite::params;
 use crate::state::app_state::AppState;
 
 #[derive(Debug, serde::Serialize)]
@@ -180,4 +181,22 @@ pub async fn get_daily_focus_stats(
         neutral_percentage: np,
         distraction_percentage: dp,
     })
+}
+
+/// 지금까지 추적된 고유 앱 이름 목록 반환 (앱 규칙 설정용)
+#[tauri::command]
+pub async fn get_tracked_apps(
+    state: State<'_, Mutex<AppState>>,
+) -> Result<Vec<String>, AppError> {
+    let pool = get_pool(&state);
+    let conn = pool.get().map_err(AppError::from)?;
+    let mut stmt = conn
+        .prepare("SELECT DISTINCT app_name FROM activities ORDER BY app_name ASC")
+        .map_err(AppError::from)?;
+    let apps = stmt
+        .query_map(params![], |row| row.get(0))
+        .map_err(AppError::from)?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(apps)
 }

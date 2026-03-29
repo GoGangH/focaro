@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { AppSettings, ClassificationRule } from "../types/bindings";
+import type { AppSettings, ClassificationRule, AppRule } from "../types/bindings";
 
-export type { AppSettings, ClassificationRule };
+export type { AppSettings, ClassificationRule, AppRule };
 
 export async function getSettings(): Promise<AppSettings> {
   return invoke<AppSettings>("get_settings");
@@ -32,4 +32,16 @@ export async function openSettingsWindow(): Promise<void> {
 
 export async function openSaveReferenceWindow(): Promise<void> {
   return invoke("open_save_reference_window");
+}
+
+export async function getAppRules(): Promise<AppRule[]> {
+  return invoke<AppRule[]>("get_app_rules");
+}
+
+export async function addAppRule(appName: string, category: string): Promise<AppRule> {
+  return invoke<AppRule>("add_app_rule", { appName, category });
+}
+
+export async function deleteAppRule(id: number): Promise<void> {
+  return invoke("delete_app_rule", { id });
 }

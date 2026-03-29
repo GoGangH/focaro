@@ -7,7 +7,7 @@ use crate::models::activity::Classification;
 use crate::services::{browser, classifier};
 use crate::services::db::DbPool;
 
-const POLL_INTERVAL_SECS: u64 = 2;
+const POLL_INTERVAL_SECS: u64 = 1;
 
 #[derive(Clone, Debug)]
 struct CurrentActivity {
@@ -63,18 +63,23 @@ pub fn start_tracker(
         let mut goal_notified = false;
 
         loop {
-            async_runtime::spawn_blocking({
+            // 현재 상태 감지 + 이전 활동 저장 + prev 업데이트를 한 번의 blocking 작업으로 처리
+            // — osascript(get_browser_url) 를 루프당 1회만 호출
+            let new_prev = async_runtime::spawn_blocking({
                 let db_pool = db_pool.clone();
                 let session_id = session_id.clone();
                 let prev_clone = prev.clone();
-                move || {
-                    poll_once(&db_pool, &session_id, prev_clone)
-                }
+                move || poll_and_update(&db_pool, &session_id, prev_clone)
             })
             .await
-            .ok();
+            .ok()
+            .flatten();
 
-            // 알림 체크 (30초마다)
+            if let Some(p) = new_prev {
+                prev = Some(p);
+            }
+
+            // 알림 체크
             let now = now_unix();
             let should_check = last_low_focus_notify.map(|t| now - t > 600).unwrap_or(true);
             if should_check {
@@ -88,92 +93,80 @@ pub fn start_tracker(
                 );
             }
 
-            // prev 업데이트를 위해 현재 상태 다시 가져오기
-            let app_name = get_frontmost_app();
-            if let Some(app_name) = app_name {
-                let url = browser::get_browser_url(&app_name);
-                let domain = url.as_deref().and_then(browser::extract_domain).map(|d| d);
-                let now = now_unix();
-
-                match &prev {
-                    Some(p) if p.is_same(&app_name, url.as_deref()) => {}
-                    _ => {
-                        let title = if url.is_some() {
-                            browser::get_browser_title(&app_name)
-                        } else {
-                            None
-                        };
-                        prev = Some(CurrentActivity {
-                            app_name,
-                            url,
-                            domain,
-                            title,
-                            started_at: now,
-                        });
-                    }
-                }
-            }
-
-            tauri::async_runtime::spawn(async move {
-                tokio::time::sleep(Duration::from_secs(POLL_INTERVAL_SECS)).await;
-            })
-            .await
-            .ok();
+            tokio::time::sleep(Duration::from_secs(POLL_INTERVAL_SECS)).await;
         }
     })
 }
 
-fn poll_once(
+/// 현재 앱/URL을 한 번 감지하고, prev와 달라졌으면 이전 활동을 DB에 저장한 뒤
+/// 새로운 CurrentActivity를 반환한다. osascript 호출이 루프당 1회로 줄어든다.
+fn poll_and_update(
     db_pool: &DbPool,
     session_id: &str,
     prev: Option<CurrentActivity>,
-) -> Result<(), AppError> {
-    let app_name = match get_frontmost_app() {
-        Some(n) => n,
-        None => return Ok(()),
-    };
-
-    let url = browser::get_browser_url(&app_name);
-    let _domain = url.as_deref().and_then(|u| browser::extract_domain(u));
+) -> Option<CurrentActivity> {
+    let app_name = get_frontmost_app()?;
+    let url = browser::get_browser_url(&app_name); // osascript — 루프당 1회
     let now = now_unix();
 
-    // 활동 변경 감지
-    if let Some(prev) = prev {
-        if !prev.is_same(&app_name, url.as_deref()) {
-            let duration = now - prev.started_at;
-            if duration > 0 {
-                // 이전 활동 저장
-                let conn = db_pool.get().map_err(AppError::from)?;
-                let domain_rules = load_domain_rules(&conn)?;
-                let title_rules = load_title_rules(&conn)?;
-                let classification = classifier::classify(
-                    prev.domain.as_deref(),
-                    prev.title.as_deref(),
-                    &domain_rules,
-                    &title_rules,
-                );
+    let changed = match &prev {
+        Some(p) => !p.is_same(&app_name, url.as_deref()),
+        None => true,
+    };
 
-                conn.execute(
-                    "INSERT INTO activities (id, session_id, app_name, url, domain, classification, started_at, duration_secs, title)
-                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-                    rusqlite::params![
-                        uuid::Uuid::new_v4().to_string(),
-                        session_id,
-                        prev.app_name,
-                        prev.url,
-                        prev.domain,
-                        classification_to_str(&classification),
-                        prev.started_at,
-                        duration,
-                        prev.title,
-                    ],
-                )
-                .map_err(AppError::from)?;
+    if changed {
+        // 이전 활동 저장
+        if let Some(ref p) = prev {
+            let duration = now - p.started_at;
+            if duration > 0 {
+                if let Ok(conn) = db_pool.get() {
+                    if let (Ok(domain_rules), Ok(title_rules), Ok(app_rules)) = (
+                        load_domain_rules(&conn),
+                        load_title_rules(&conn),
+                        load_app_rules(&conn),
+                    ) {
+                        let classification = classifier::classify(
+                            p.domain.as_deref(),
+                            p.title.as_deref(),
+                            Some(&p.app_name),
+                            &domain_rules,
+                            &title_rules,
+                            &app_rules,
+                        );
+                        let _ = conn.execute(
+                            "INSERT INTO activities \
+                             (id, session_id, app_name, url, domain, classification, started_at, duration_secs, title) \
+                             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                            rusqlite::params![
+                                uuid::Uuid::new_v4().to_string(),
+                                session_id,
+                                p.app_name,
+                                p.url,
+                                p.domain,
+                                classification_to_str(&classification),
+                                p.started_at,
+                                duration,
+                                p.title,
+                            ],
+                        );
+                    }
+                }
             }
         }
-    }
 
-    Ok(())
+        // 타이틀은 변경 시점에만 가져옴 (osascript 추가 호출)
+        let title = if url.is_some() {
+            browser::get_browser_title(&app_name)
+        } else {
+            None
+        };
+        let domain = url.as_deref().and_then(|u| browser::extract_domain(u));
+
+        Some(CurrentActivity { app_name, url, domain, title, started_at: now })
+    } else {
+        // 동일 활동 — prev 그대로 유지
+        prev
+    }
 }
 
 fn load_domain_rules(conn: &rusqlite::Connection) -> Result<Vec<(String, String)>, AppError> {
@@ -196,6 +189,19 @@ fn load_title_rules(conn: &rusqlite::Connection) -> Result<Vec<(String, String, 
 
     let rows = stmt
         .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
+        .map_err(AppError::from)?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(AppError::from)?;
+    Ok(rows)
+}
+
+fn load_app_rules(conn: &rusqlite::Connection) -> Result<Vec<(String, String)>, AppError> {
+    let mut stmt = conn
+        .prepare("SELECT app_name, category FROM app_rules")
+        .map_err(AppError::from)?;
+
+    let rows = stmt
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
         .map_err(AppError::from)?
         .collect::<Result<Vec<_>, _>>()
         .map_err(AppError::from)?;

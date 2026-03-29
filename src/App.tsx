@@ -8,6 +8,10 @@ import "./App.css";
 
 const windowLabel = getCurrentWindow().label;
 
+if (windowLabel !== "dropdown") {
+  document.body.classList.add("dark-bg");
+}
+
 function App() {
   if (windowLabel === "dashboard") return <Dashboard />;
   if (windowLabel === "settings") return <Settings />;

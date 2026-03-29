@@ -8,6 +8,7 @@ import {
   deleteClassificationRule,
 } from "../services/settings";
 import { AutoLaunchSettings } from "../components/Settings/AutoLaunchSettings";
+import { AppRuleSettings } from "../components/Settings/AppRuleSettings";
 
 const RETENTION_OPTIONS = [
   { label: "7일", value: 7 },
@@ -193,6 +194,8 @@ export function Settings() {
           </button>
         </div>
       </section>
+
+      <AppRuleSettings />
 
       {/* 저장 버튼 */}
       <div className="settings-footer">

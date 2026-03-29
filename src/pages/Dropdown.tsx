@@ -74,7 +74,7 @@ export function Dropdown() {
   useEffect(() => {
     if (!session) { setStats(null); setTopApps([]); setElapsed(0); return; }
     refreshStats(session.id);
-    const interval = setInterval(() => refreshStats(session.id), 5000);
+    const interval = setInterval(() => refreshStats(session.id), 3000);
     return () => clearInterval(interval);
   }, [session, refreshStats]);
 

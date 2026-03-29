@@ -1,23 +1,22 @@
 use crate::models::activity::Classification;
 
 /// 활동 분류.
-/// 우선순위: title_rules (domain+keyword) > domain_rules (domain) > 내장 기본 규칙 > Neutral
+/// 우선순위: title_rules (domain+keyword) > domain_rules (domain) > app_rules (app_name) > 내장 기본 규칙 > Neutral
 ///
 /// - domain_rules: (domain, category) — DB classification_rules 테이블
 /// - title_rules: (domain, keyword, category) — DB title_rules 테이블
+/// - app_rules: (app_name, category) — DB app_rules 테이블
 /// - title: 현재 브라우저 탭 타이틀 (keyword 매칭에 사용)
 pub fn classify(
     domain: Option<&str>,
     title: Option<&str>,
+    app_name: Option<&str>,
     domain_rules: &[(String, String)],
     title_rules: &[(String, String, String)],
+    app_rules: &[(String, String)],
 ) -> Classification {
-    let Some(d) = domain else {
-        return Classification::Neutral;
-    };
-
     // 1순위: title_rules (domain + keyword 매칭, 대소문자 무시)
-    if let Some(t) = title {
+    if let (Some(d), Some(t)) = (domain, title) {
         let t_lower = t.to_lowercase();
         for (rule_domain, keyword, category) in title_rules {
             if rule_domain == d && t_lower.contains(&keyword.to_lowercase()) {
@@ -27,22 +26,37 @@ pub fn classify(
     }
 
     // 2순위: 사용자 정의 domain_rules
-    for (rule_domain, category) in domain_rules {
-        if rule_domain == d {
-            return parse_category(category);
+    if let Some(d) = domain {
+        for (rule_domain, category) in domain_rules {
+            if rule_domain == d {
+                return parse_category(category);
+            }
         }
     }
 
-    // 3순위: 내장 기본 규칙
-    match d {
-        "github.com" | "stackoverflow.com" | "docs.rs" | "developer.apple.com"
-        | "figma.com" | "notion.so" | "linear.app" => Classification::Focus,
+    // 3순위: 내장 기본 domain 규칙 (domain이 있을 때만)
+    if let Some(d) = domain {
+        return match d {
+            "github.com" | "stackoverflow.com" | "docs.rs" | "developer.apple.com"
+            | "figma.com" | "notion.so" | "linear.app" => Classification::Focus,
 
-        "youtube.com" | "twitter.com" | "x.com" | "instagram.com" | "reddit.com"
-        | "facebook.com" | "tiktok.com" | "netflix.com" => Classification::Distraction,
+            "youtube.com" | "twitter.com" | "x.com" | "instagram.com" | "reddit.com"
+            | "facebook.com" | "tiktok.com" | "netflix.com" => Classification::Distraction,
 
-        _ => Classification::Neutral,
+            _ => Classification::Neutral,
+        };
     }
+
+    // 4순위: app_rules — domain이 없는 네이티브 앱에만 적용
+    if let Some(a) = app_name {
+        for (rule_app, category) in app_rules {
+            if rule_app == a {
+                return parse_category(category);
+            }
+        }
+    }
+
+    Classification::Neutral
 }
 
 fn parse_category(s: &str) -> Classification {
@@ -61,38 +75,38 @@ mod tests {
     // 기존 테스트 — 새 시그니처에 맞게 빈 슬라이스 전달
     #[test]
     fn test_github_classified_as_focus() {
-        assert_eq!(classify(Some("github.com"), None, &[], &[]), Classification::Focus);
+        assert_eq!(classify(Some("github.com"), None, None, &[], &[], &[]), Classification::Focus);
     }
 
     #[test]
     fn test_stackoverflow_classified_as_focus() {
-        assert_eq!(classify(Some("stackoverflow.com"), None, &[], &[]), Classification::Focus);
+        assert_eq!(classify(Some("stackoverflow.com"), None, None, &[], &[], &[]), Classification::Focus);
     }
 
     #[test]
     fn test_youtube_classified_as_distraction() {
-        assert_eq!(classify(Some("youtube.com"), None, &[], &[]), Classification::Distraction);
+        assert_eq!(classify(Some("youtube.com"), None, None, &[], &[], &[]), Classification::Distraction);
     }
 
     #[test]
     fn test_twitter_classified_as_distraction() {
-        assert_eq!(classify(Some("twitter.com"), None, &[], &[]), Classification::Distraction);
+        assert_eq!(classify(Some("twitter.com"), None, None, &[], &[], &[]), Classification::Distraction);
     }
 
     #[test]
     fn test_unknown_domain_classified_as_neutral() {
-        assert_eq!(classify(Some("example.com"), None, &[], &[]), Classification::Neutral);
+        assert_eq!(classify(Some("example.com"), None, None, &[], &[], &[]), Classification::Neutral);
     }
 
     #[test]
     fn test_none_domain_classified_as_neutral() {
-        assert_eq!(classify(None, None, &[], &[]), Classification::Neutral);
+        assert_eq!(classify(None, None, None, &[], &[], &[]), Classification::Neutral);
     }
 
     #[test]
     fn test_custom_domain_rule_overrides_default() {
         let rules = vec![("example.com".to_string(), "Focus".to_string())];
-        assert_eq!(classify(Some("example.com"), None, &rules, &[]), Classification::Focus);
+        assert_eq!(classify(Some("example.com"), None, None, &rules, &[], &[]), Classification::Focus);
     }
 
     // title_rules 테스트
@@ -105,7 +119,7 @@ mod tests {
             "Focus".to_string(),
         )];
         assert_eq!(
-            classify(Some("youtube.com"), Some("Rust Tutorial 2024"), &[], &title_rules),
+            classify(Some("youtube.com"), Some("Rust Tutorial 2024"), None, &[], &title_rules, &[]),
             Classification::Focus
         );
     }
@@ -118,7 +132,7 @@ mod tests {
             "Focus".to_string(),
         )];
         assert_eq!(
-            classify(Some("youtube.com"), Some("TUTORIAL React"), &[], &title_rules),
+            classify(Some("youtube.com"), Some("TUTORIAL React"), None, &[], &title_rules, &[]),
             Classification::Focus
         );
     }
@@ -132,7 +146,7 @@ mod tests {
         )];
         // 타이틀에 keyword 없으면 기본 Distraction
         assert_eq!(
-            classify(Some("youtube.com"), Some("Music MV"), &[], &title_rules),
+            classify(Some("youtube.com"), Some("Music MV"), None, &[], &title_rules, &[]),
             Classification::Distraction
         );
     }
@@ -146,7 +160,7 @@ mod tests {
         )];
         // domain이 다르면 title_rule 무시, youtube.com 기본 규칙 적용
         assert_eq!(
-            classify(Some("youtube.com"), Some("tutorial"), &[], &title_rules),
+            classify(Some("youtube.com"), Some("tutorial"), None, &[], &title_rules, &[]),
             Classification::Distraction
         );
     }
@@ -161,7 +175,7 @@ mod tests {
         )];
         // title_rules가 domain_rules보다 우선
         assert_eq!(
-            classify(Some("youtube.com"), Some("파이썬 강의 2024"), &domain_rules, &title_rules),
+            classify(Some("youtube.com"), Some("파이썬 강의 2024"), None, &domain_rules, &title_rules, &[]),
             Classification::Focus
         );
     }
@@ -175,8 +189,45 @@ mod tests {
         )];
         // title이 None이면 title_rules 건너뛰고 내장 규칙 적용
         assert_eq!(
-            classify(Some("youtube.com"), None, &[], &title_rules),
+            classify(Some("youtube.com"), None, None, &[], &title_rules, &[]),
             Classification::Distraction
+        );
+    }
+
+    #[test]
+    fn test_app_rule_matches_native_app() {
+        let app_rules = vec![("Xcode".to_string(), "Focus".to_string())];
+        assert_eq!(
+            classify(None, None, Some("Xcode"), &[], &[], &app_rules),
+            Classification::Focus
+        );
+    }
+
+    #[test]
+    fn test_app_rule_distraction() {
+        let app_rules = vec![("Slack".to_string(), "Distraction".to_string())];
+        assert_eq!(
+            classify(None, None, Some("Slack"), &[], &[], &app_rules),
+            Classification::Distraction
+        );
+    }
+
+    #[test]
+    fn test_app_rule_priority_over_builtin_domain() {
+        // Chrome이라는 앱 이름에 Focus 규칙이 있어도, domain이 있으면 domain이 우선
+        let app_rules = vec![("Google Chrome".to_string(), "Focus".to_string())];
+        // youtube.com은 내장 Distraction, domain 규칙이 app_rule보다 우선
+        assert_eq!(
+            classify(Some("youtube.com"), None, Some("Google Chrome"), &[], &[], &app_rules),
+            Classification::Distraction
+        );
+    }
+
+    #[test]
+    fn test_no_app_rule_native_app_returns_neutral() {
+        assert_eq!(
+            classify(None, None, Some("UnknownApp"), &[], &[], &[]),
+            Classification::Neutral
         );
     }
 }
