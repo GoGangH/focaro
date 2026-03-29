@@ -26,38 +26,43 @@
       },
       {
         "label": "dashboard",
-        "title": "focaro Dashboard",
+        "title": "",
         "width": 900,
         "height": 650,
         "visible": false,
-        "resizable": true
+        "resizable": true,
+        "titleBarStyle": "overlay",
+        "hiddenTitle": true
       },
       {
         "label": "save-reference",
-        "title": "Reference 저장",
+        "title": "",
         "width": 480,
         "height": 280,
         "visible": false,
         "resizable": false,
-        "decorations": true
+        "titleBarStyle": "overlay",
+        "hiddenTitle": true
       },
       {
         "label": "settings",
-        "title": "focaro 설정",
+        "title": "",
         "width": 600,
         "height": 500,
         "visible": false,
         "resizable": false,
-        "decorations": true
+        "titleBarStyle": "overlay",
+        "hiddenTitle": true
       },
       {
         "label": "onboarding",
-        "title": "focaro 시작하기",
+        "title": "",
         "width": 520,
         "height": 460,
         "visible": false,
         "resizable": false,
-        "decorations": true,
+        "titleBarStyle": "overlay",
+        "hiddenTitle": true,
         "center": true
       }
     ],

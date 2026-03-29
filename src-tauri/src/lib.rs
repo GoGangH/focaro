@@ -239,6 +239,7 @@ pub fn run() {
             commands::onboarding::add_title_rule,
             commands::onboarding::delete_title_rule,
             commands::onboarding::override_activity_classification,
+            commands::export::export_data,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

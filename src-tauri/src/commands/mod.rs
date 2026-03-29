@@ -1,4 +1,5 @@
 pub mod activity;
+pub mod export;
 pub mod goal;
 pub mod onboarding;
 pub mod reference;
