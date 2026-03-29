@@ -111,3 +111,10 @@ export interface WeekdayStat {
   weekday: number; // 0=Mon, 6=Sun
   avg_focus_mins: number;
 }
+
+export interface GoalHistoryEntry {
+  date: string;       // YYYY-MM-DD
+  target_secs: number;
+  actual_secs: number;
+  achieved: boolean;
+}

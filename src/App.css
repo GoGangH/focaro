@@ -2144,3 +2144,76 @@ body.dark-bg {
   font-size: 10px;
   color: #636366;
 }
+
+/* Goal History */
+.score-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.goal-history {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.goal-history__stats {
+  display: flex;
+  gap: 24px;
+}
+
+.goal-history__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.goal-history__stat-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.goal-history__stat-label {
+  font-size: 11px;
+  color: #8e8e93;
+}
+
+.goal-history__calendar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.goal-history__day {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+.goal-history__day--achieved {
+  background: rgba(48, 209, 88, 0.3);
+}
+
+.goal-history__day-label {
+  font-size: 10px;
+  color: #8e8e93;
+}
+
+.goal-history__day--achieved .goal-history__day-label {
+  color: #30d158;
+}
+
+/* Streak badge in GoalProgress */
+.goal-progress__streak {
+  font-size: 12px;
+  color: #ffd60a;
+  font-weight: 600;
+}

@@ -105,6 +105,23 @@ pub fn get_goal_progress(conn: &Connection, date: &str) -> Result<GoalProgress, 
     })
 }
 
+/// 일별 목표 달성 결과를 goal_history 테이블에 기록 (upsert)
+pub fn record_daily_goal_result(
+    conn: &Connection,
+    date: &str,
+    target_secs: i64,
+    actual_secs: i64,
+) -> Result<(), AppError> {
+    let achieved = if actual_secs >= target_secs { 1 } else { 0 };
+    conn.execute(
+        "INSERT OR REPLACE INTO goal_history (date, target_secs, actual_secs, achieved)
+         VALUES (?1, ?2, ?3, ?4)",
+        params![date, target_secs, actual_secs, achieved],
+    )
+    .map_err(AppError::from)?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

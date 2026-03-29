@@ -3,7 +3,7 @@ use tauri::{AppHandle, State};
 
 use crate::errors::AppError;
 use crate::models::session::{Session, SessionStatus};
-use crate::services::{metrics as metrics_svc, session as session_svc, tracker};
+use crate::services::{goal as goal_svc, metrics as metrics_svc, session as session_svc, tracker};
 use crate::state::app_state::AppState;
 
 #[derive(Debug, serde::Serialize)]
@@ -87,6 +87,20 @@ pub async fn end_session(state: State<'_, Mutex<AppState>>) -> Result<Session, A
     };
 
     let (started_at, ended_at) = session_svc::finish_session_record(&pool, &session_id)?;
+
+    // 세션 날짜의 목표 달성 결과 기록
+    {
+        let conn = pool.get().map_err(AppError::from)?;
+        let date = &unix_to_iso(started_at)[..10]; // YYYY-MM-DD
+        if let Ok(progress) = goal_svc::get_goal_progress(&conn, date) {
+            let _ = goal_svc::record_daily_goal_result(
+                &conn,
+                date,
+                progress.target_secs,
+                progress.actual_focus_secs,
+            );
+        }
+    }
 
     Ok(Session {
         id: session_id,

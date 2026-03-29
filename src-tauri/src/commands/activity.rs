@@ -294,6 +294,55 @@ pub async fn get_weekday_stats(
     Ok(stats)
 }
 
+/// 최근 N일 목표 달성 이력
+#[derive(Debug, serde::Serialize)]
+pub struct GoalHistoryEntry {
+    pub date: String,
+    pub target_secs: i64,
+    pub actual_secs: i64,
+    pub achieved: bool,
+}
+
+#[tauri::command]
+pub async fn get_goal_history(
+    state: State<'_, Mutex<AppState>>,
+    days: u32,
+) -> Result<Vec<GoalHistoryEntry>, AppError> {
+    let pool = get_pool(&state);
+    let conn = pool.get().map_err(AppError::from)?;
+    let since = chrono::Utc::now()
+        .format("%Y-%m-%d")
+        .to_string();
+    // days 이전 날짜 계산
+    let since_date = {
+        let d = chrono::Utc::now() - chrono::Duration::days(days as i64);
+        d.format("%Y-%m-%d").to_string()
+    };
+    let mut stmt = conn
+        .prepare(
+            "SELECT date, target_secs, actual_secs, achieved
+             FROM goal_history
+             WHERE date >= ?1
+             ORDER BY date ASC",
+        )
+        .map_err(AppError::from)?;
+    let rows = stmt
+        .query_map(params![since_date], |row| {
+            let achieved_int: i64 = row.get(3)?;
+            Ok(GoalHistoryEntry {
+                date: row.get(0)?,
+                target_secs: row.get(1)?,
+                actual_secs: row.get(2)?,
+                achieved: achieved_int != 0,
+            })
+        })
+        .map_err(AppError::from)?
+        .filter_map(|r| r.ok())
+        .collect();
+    let _ = since; // suppress unused warning
+    Ok(rows)
+}
+
 /// 지금까지 추적된 고유 앱 이름 목록 반환 (앱 규칙 설정용)
 #[tauri::command]
 pub async fn get_tracked_apps(
