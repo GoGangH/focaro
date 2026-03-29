@@ -313,37 +313,20 @@ title_rules (domain+keyword) → domain_rules (domain) → app_rules (app_name) 
 
 ### 백엔드
 
-- [ ] TE001 `src-tauri/migrations/V7__app_rules.sql`: `app_rules` 테이블 생성
-  ```sql
-  CREATE TABLE IF NOT EXISTS app_rules (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    app_name TEXT NOT NULL UNIQUE,
-    category TEXT NOT NULL CHECK (category IN ('Focus', 'Neutral', 'Distraction'))
-  );
-  CREATE INDEX IF NOT EXISTS idx_app_rules_app_name ON app_rules(app_name);
-  ```
-- [ ] TE002 [P] `src-tauri/src/services/classifier.rs` 업데이트: `classify` 함수 시그니처에 `app_rules: &[(String, String)]` 파라미터 추가, 우선순위 적용
-  - `title_rules` → `domain_rules` → `app_rules` → 내장 기본값 → Neutral
-  - TDD: 테스트 먼저 작성 (app_rule 매칭, 우선순위 검증)
-- [ ] TE003 [P] `src-tauri/src/services/activity.rs`: `load_app_rules(pool)` 함수 추가, `poll_once`에서 호출
-- [ ] TE004 [P] `src-tauri/src/commands/activity.rs`: `get_tracked_apps` 커맨드 추가
-  ```sql
-  SELECT DISTINCT app_name FROM activities ORDER BY app_name ASC
-  ```
-- [ ] TE005 [P] `src-tauri/src/commands/settings.rs`: `get_app_rules`, `add_app_rule(app_name, category)`, `delete_app_rule(id)` 커맨드 추가
-- [ ] TE006 `src-tauri/src/lib.rs`: TE005 커맨드 `invoke_handler`에 등록
+- [x] TE001 `src-tauri/migrations/V7__app_rules.sql`: `app_rules` 테이블 생성
+- [x] TE002 [P] `src-tauri/src/services/classifier.rs` 업데이트: `app_name` + `app_rules` 파라미터 추가, domain 없는 네이티브 앱에만 적용 (우선순위: title_rules → domain_rules → 내장 기본값 → app_rules → Neutral)
+- [x] TE003 [P] `src-tauri/src/services/tracker.rs`: `load_app_rules` 추가, `poll_once`에서 호출
+- [x] TE004 [P] `src-tauri/src/commands/activity.rs`: `get_tracked_apps` 커맨드 추가
+- [x] TE005 [P] `src-tauri/src/commands/settings.rs` + `services/settings.rs`: `get_app_rules`, `add_app_rule`, `delete_app_rule` 추가
+- [x] TE006 `src-tauri/src/lib.rs`: 커맨드 등록
 
 ### 프론트엔드
 
-- [ ] TE007 [P] `src/types/bindings.ts`: `AppRule { id: number; app_name: string; category: string }` 인터페이스 추가
-- [ ] TE008 [P] `src/services/settings.ts`: `getAppRules`, `addAppRule`, `deleteAppRule` 추가
-- [ ] TE009 [P] `src/services/activity.ts`: `getTrackedApps(): Promise<string[]>` 추가
-- [ ] TE010 `src/components/Settings/AppRuleSettings.tsx`: 앱 규칙 설정 컴포넌트 구현
-  - **추적된 앱 목록 선택**: `getTrackedApps()`로 조회한 앱 이름 드롭다운 (이미 규칙 있는 항목 비활성화)
-  - **직접 입력**: 텍스트 입력창으로 앱 이름 수동 입력
-  - Focus / Neutral / Distraction 선택 드롭다운
-  - 추가된 규칙 목록 표시 + 삭제 버튼
-- [ ] TE011 `src/pages/Settings.tsx`: `<AppRuleSettings />` 섹션 추가 (도메인 규칙 섹션 아래)
+- [x] TE007 [P] `src/types/bindings.ts`: `AppRule` 인터페이스 추가
+- [x] TE008 [P] `src/services/settings.ts`: `getAppRules`, `addAppRule`, `deleteAppRule` 추가
+- [x] TE009 [P] `src/services/activity.ts`: `getTrackedApps()` 추가
+- [x] TE010 `src/components/Settings/AppRuleSettings.tsx`: 앱 규칙 설정 컴포넌트 구현 (추적앱 드롭다운 + 직접입력, 규칙 목록 + 삭제)
+- [x] TE011 `src/pages/Settings.tsx`: `<AppRuleSettings />` 섹션 추가
 
 ---
 

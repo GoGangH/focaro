@@ -1946,3 +1946,35 @@ body {
   border-color: #0a84ff;
   color: #0a84ff;
 }
+
+/* ── AppRuleSettings ── */
+
+.settings-empty {
+  font-size: 12px;
+  color: #48484a;
+  margin: 4px 0 8px;
+}
+
+.app-rule-source-toggle {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.app-rule-toggle-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: #8e8e93;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.app-rule-toggle-btn.active {
+  background: rgba(10,132,255,0.18);
+  border-color: #0a84ff;
+  color: #0a84ff;
+}

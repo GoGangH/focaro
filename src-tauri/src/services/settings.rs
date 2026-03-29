@@ -3,6 +3,13 @@ use rusqlite::{params, Connection};
 use crate::errors::AppError;
 use crate::models::settings::{AppSettings, ClassificationRule};
 
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct AppRule {
+    pub id: i64,
+    pub app_name: String,
+    pub category: String,
+}
+
 pub fn get_settings(conn: &Connection) -> Result<AppSettings, AppError> {
     let retention_days: i64 = conn
         .query_row(
@@ -119,6 +126,57 @@ pub fn delete_classification_rule(conn: &Connection, id: i64) -> Result<(), AppE
 
     if affected == 0 {
         return Err(AppError::NotFound(format!("규칙 id={id} 없음")));
+    }
+    Ok(())
+}
+
+pub fn get_app_rules(conn: &Connection) -> Result<Vec<AppRule>, AppError> {
+    let mut stmt = conn
+        .prepare("SELECT id, app_name, category FROM app_rules ORDER BY app_name ASC")
+        .map_err(AppError::from)?;
+
+    let rules = stmt
+        .query_map([], |r| {
+            Ok(AppRule {
+                id: r.get(0)?,
+                app_name: r.get(1)?,
+                category: r.get(2)?,
+            })
+        })
+        .map_err(AppError::from)?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    Ok(rules)
+}
+
+pub fn add_app_rule(
+    conn: &Connection,
+    app_name: &str,
+    category: &str,
+) -> Result<AppRule, AppError> {
+    conn.execute(
+        "INSERT INTO app_rules (app_name, category) VALUES (?1, ?2)
+         ON CONFLICT(app_name) DO UPDATE SET category = excluded.category",
+        params![app_name, category],
+    )
+    .map_err(AppError::from)?;
+
+    let id = conn.last_insert_rowid();
+    Ok(AppRule {
+        id,
+        app_name: app_name.to_string(),
+        category: category.to_string(),
+    })
+}
+
+pub fn delete_app_rule(conn: &Connection, id: i64) -> Result<(), AppError> {
+    let affected = conn
+        .execute("DELETE FROM app_rules WHERE id = ?1", params![id])
+        .map_err(AppError::from)?;
+
+    if affected == 0 {
+        return Err(AppError::NotFound(format!("앱 규칙 id={id} 없음")));
     }
     Ok(())
 }

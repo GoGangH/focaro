@@ -3,6 +3,7 @@ use tauri::{Manager, State};
 
 use crate::errors::AppError;
 use crate::models::settings::{AppSettings, ClassificationRule};
+use crate::services::settings::AppRule;
 use crate::state::app_state::AppState;
 
 // ─── 커맨드 ─────────────────────────────────────────────────────────────────
@@ -75,6 +76,36 @@ pub async fn open_save_reference_window(app: tauri::AppHandle) -> Result<(), App
         let _ = win.set_focus();
     }
     Ok(())
+}
+
+#[tauri::command]
+pub async fn get_app_rules(
+    state: State<'_, Mutex<AppState>>,
+) -> Result<Vec<AppRule>, AppError> {
+    let pool = state.lock().unwrap().db_pool.clone();
+    let conn = pool.get().map_err(AppError::from)?;
+    crate::services::settings::get_app_rules(&conn)
+}
+
+#[tauri::command]
+pub async fn add_app_rule(
+    app_name: String,
+    category: String,
+    state: State<'_, Mutex<AppState>>,
+) -> Result<AppRule, AppError> {
+    let pool = state.lock().unwrap().db_pool.clone();
+    let conn = pool.get().map_err(AppError::from)?;
+    crate::services::settings::add_app_rule(&conn, &app_name, &category)
+}
+
+#[tauri::command]
+pub async fn delete_app_rule(
+    id: i64,
+    state: State<'_, Mutex<AppState>>,
+) -> Result<(), AppError> {
+    let pool = state.lock().unwrap().db_pool.clone();
+    let conn = pool.get().map_err(AppError::from)?;
+    crate::services::settings::delete_app_rule(&conn, id)
 }
 
 // ─── 테스트 ─────────────────────────────────────────────────────────────────

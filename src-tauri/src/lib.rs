@@ -240,6 +240,10 @@ pub fn run() {
             commands::onboarding::delete_title_rule,
             commands::onboarding::override_activity_classification,
             commands::export::export_data,
+            commands::activity::get_tracked_apps,
+            commands::settings::get_app_rules,
+            commands::settings::add_app_rule,
+            commands::settings::delete_app_rule,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

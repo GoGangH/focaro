@@ -146,11 +146,14 @@ fn poll_once(
                 let conn = db_pool.get().map_err(AppError::from)?;
                 let domain_rules = load_domain_rules(&conn)?;
                 let title_rules = load_title_rules(&conn)?;
+                let app_rules = load_app_rules(&conn)?;
                 let classification = classifier::classify(
                     prev.domain.as_deref(),
                     prev.title.as_deref(),
+                    Some(&prev.app_name),
                     &domain_rules,
                     &title_rules,
+                    &app_rules,
                 );
 
                 conn.execute(
@@ -196,6 +199,19 @@ fn load_title_rules(conn: &rusqlite::Connection) -> Result<Vec<(String, String, 
 
     let rows = stmt
         .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
+        .map_err(AppError::from)?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(AppError::from)?;
+    Ok(rows)
+}
+
+fn load_app_rules(conn: &rusqlite::Connection) -> Result<Vec<(String, String)>, AppError> {
+    let mut stmt = conn
+        .prepare("SELECT app_name, category FROM app_rules")
+        .map_err(AppError::from)?;
+
+    let rows = stmt
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
         .map_err(AppError::from)?
         .collect::<Result<Vec<_>, _>>()
         .map_err(AppError::from)?;

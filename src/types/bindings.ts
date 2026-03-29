@@ -94,3 +94,9 @@ export interface TitleRule {
   keyword: string;
   category: string;
 }
+
+export interface AppRule {
+  id: number;
+  app_name: string;
+  category: string;
+}
