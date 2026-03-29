@@ -14,6 +14,7 @@ import {
   getCurrentTitle,
   checkAccessibilityPermission,
 } from "../services/session";
+import { getDailyFocusStats } from "../services/activity";
 import { DonutChart } from "../components/Dropdown/DonutChart";
 import { GoalProgress } from "../components/Dropdown/GoalProgress";
 import { QuickOverride } from "../components/Dropdown/QuickOverride";
@@ -45,6 +46,7 @@ export function Dropdown() {
   const [currentTitle, setCurrentTitle] = useState<string | null>(null);
   const [accessibilityGranted, setAccessibilityGranted] = useState(true);
   const [showQuickOverride, setShowQuickOverride] = useState(false);
+  const [todayFocusSecs, setTodayFocusSecs] = useState(0);
 
   // Recovery + 권한 체크 on mount
   useEffect(() => {
@@ -53,6 +55,13 @@ export function Dropdown() {
     getIncompleteSession().then((s) => { if (s) setIncompleteSession(s); });
     checkAccessibilityPermission().then((granted) => setAccessibilityGranted(granted));
   }, [recoveryChecked]);
+
+  // 세션 없을 때 오늘 누적 집중 시간 로드
+  useEffect(() => {
+    if (session) return;
+    const today = new Date().toISOString().split("T")[0];
+    getDailyFocusStats(today).then((m) => setTodayFocusSecs(m.focus_secs)).catch(() => {});
+  }, [session]);
 
   // Poll stats every 5s when session active
   const refreshStats = useCallback(async (sid: string) => {
@@ -133,11 +142,15 @@ export function Dropdown() {
       {/* Header: timer + focus % */}
       <div className="dd-header">
         <div className="dd-timer">{session ? formatTimer(elapsed) : "--:--"}</div>
-        {session && (
+        {session ? (
           <div className="dd-focus-pct" style={{ color: "#30d158" }}>
             Focus {focusPct}%
           </div>
-        )}
+        ) : todayFocusSecs > 0 ? (
+          <div className="dd-today-focus">
+            오늘 집중 {formatTimer(todayFocusSecs)}
+          </div>
+        ) : null}
       </div>
 
       {/* Session button */}

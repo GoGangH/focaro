@@ -100,6 +100,22 @@ export function Dashboard() {
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [date, loadData]);
 
+  // ← → 키보드 날짜 네비게이션 (day 탭에서만)
+  const isDayTab = tab === "timeline" || tab === "sites" || tab === "score";
+  useEffect(() => {
+    if (!isDayTab) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === "ArrowLeft") setDate((d) => shiftDate(d, -1));
+      if (e.key === "ArrowRight") setDate((d) => {
+        const next = shiftDate(d, 1);
+        return next <= todayDateStr() ? next : d;
+      });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isDayTab]);
+
   const TABS: { id: Tab; label: string }[] = [
     { id: "timeline", label: "타임라인" },
     { id: "sites", label: "Top Sites" },
@@ -109,9 +125,6 @@ export function Dashboard() {
     { id: "pattern", label: "패턴" },
     { id: "refs", label: "References" },
   ];
-
-  // Date nav only relevant for day-based tabs
-  const isDayTab = tab === "timeline" || tab === "sites" || tab === "score";
 
   return (
     <div className="dashboard">
@@ -159,7 +172,13 @@ export function Dashboard() {
       <div className="dash-content">
         <TabErrorBoundary key={tab}>
           {loading && isDayTab ? (
-            <p className="dash-loading">로딩 중...</p>
+            <div className="dash-skeleton">
+              <div className="dash-skeleton__bar dash-skeleton__bar--lg" />
+              <div className="dash-skeleton__bar" />
+              <div className="dash-skeleton__bar dash-skeleton__bar--sm" />
+              <div className="dash-skeleton__bar" />
+              <div className="dash-skeleton__bar dash-skeleton__bar--sm" />
+            </div>
           ) : (
             <>
               {tab === "timeline" && <ActivityTimeline activities={activities} sessionEvents={sessionEvents} />}

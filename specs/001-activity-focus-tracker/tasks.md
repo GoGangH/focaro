@@ -395,23 +395,23 @@ title_rules (domain+keyword) → domain_rules (domain) → app_rules (app_name) 
 
 ### 대시보드
 
-- [ ] TI001 `src/pages/Dashboard.tsx` + `src/App.css`: 탭 콘텐츠 로딩 시 스켈레톤 UI (현재 빈 화면)
-- [ ] TI002 각 탭 컴포넌트: 데이터 없을 때 통일된 빈 상태 메시지 및 아이콘
-- [ ] TI003 `src/pages/Dashboard.tsx`: 날짜 네비게이션 키보드 단축키 (← →)
+- [x] TI001 `src/pages/Dashboard.tsx` + `src/App.css`: 탭 콘텐츠 로딩 시 스켈레톤 UI (현재 빈 화면)
+- [x] TI002 각 탭 컴포넌트: 데이터 없을 때 통일된 빈 상태 메시지 및 아이콘
+- [x] TI003 `src/pages/Dashboard.tsx`: 날짜 네비게이션 키보드 단축키 (← →)
 
 ### 드롭다운
 
-- [ ] TI004 `src/pages/Dropdown.tsx` + `src/App.css`: 세션 없을 때 오늘 누적 집중 시간 간략 표시
+- [x] TI004 `src/pages/Dropdown.tsx` + `src/App.css`: 세션 없을 때 오늘 누적 집중 시간 간략 표시
 
 ### 설정
 
-- [ ] TI005 `src/pages/Settings.tsx` + `src/App.css`: 저장 성공/실패 토스트 알림 컴포넌트
-- [ ] TI006 `src/pages/Settings.tsx`: 도메인/앱 규칙 추가 시 중복 체크 및 에러 피드백
+- [x] TI005 `src/pages/Settings.tsx` + `src/App.css`: 저장 성공/실패 토스트 알림 컴포넌트
+- [x] TI006 `src/pages/Settings.tsx`: 도메인/앱 규칙 추가 시 중복 체크 및 에러 피드백
 
 ### 성능
 
-- [ ] TI007 `src/pages/Dashboard.tsx`: 같은 탭 재클릭 시 리페치 방지 (이미 로딩 중이면 skip)
-- [ ] TI008 `src/components/Settings/*.tsx`: 설정 창 데이터 마운트 시 1회만 로드, 불필요한 재요청 제거
+- [x] TI007 `src/pages/Dashboard.tsx`: 같은 탭 재클릭 시 리페치 방지 (이미 로딩 중이면 skip)
+- [x] TI008 `src/components/Settings/*.tsx`: 설정 창 데이터 마운트 시 1회만 로드, 불필요한 재요청 제거
 
 ---
 
