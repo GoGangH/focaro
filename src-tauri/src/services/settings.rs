@@ -180,3 +180,4 @@ pub fn delete_app_rule(conn: &Connection, id: i64) -> Result<(), AppError> {
     }
     Ok(())
 }
+

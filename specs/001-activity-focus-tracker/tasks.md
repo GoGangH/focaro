@@ -336,15 +336,15 @@ title_rules (domain+keyword) → domain_rules (domain) → app_rules (app_name) 
 
 ### 백엔드
 
-- [ ] TF001 [P] `src-tauri/src/commands/settings.rs` + `services/settings.rs`: `get_title_rules`, `delete_title_rule` 커맨드 추가
-- [ ] TF002 `src-tauri/src/lib.rs`: 커맨드 등록
+- [x] TF001 [P] `src-tauri/src/commands/settings.rs` + `services/settings.rs`: `get_title_rules`, `delete_title_rule` 커맨드 추가
+- [x] TF002 `src-tauri/src/lib.rs`: 커맨드 등록
 
 ### 프론트엔드
 
-- [ ] TF003 [P] `src/types/bindings.ts`: `TitleRule` 인터페이스 추가 (`id`, `domain`, `keyword`, `category`)
-- [ ] TF004 [P] `src/services/settings.ts`: `getTitleRules`, `deleteTitleRule` 추가
-- [ ] TF005 `src/components/Settings/TitleRuleSettings.tsx`: 타이틀 규칙 목록(도메인+키워드+분류) + 삭제 버튼
-- [ ] TF006 `src/pages/Settings.tsx`: `<TitleRuleSettings />` 섹션 추가
+- [x] TF003 [P] `src/types/bindings.ts`: `TitleRule` 인터페이스 추가 (`id`, `domain`, `keyword`, `category`)
+- [x] TF004 [P] `src/services/settings.ts`: `getTitleRules`, `deleteTitleRule` 추가
+- [x] TF005 `src/components/Settings/TitleRuleSettings.tsx`: 타이틀 규칙 목록(도메인+키워드+분류) + 삭제 버튼
+- [x] TF006 `src/pages/Settings.tsx`: `<TitleRuleSettings />` 섹션 추가
 
 ---
 

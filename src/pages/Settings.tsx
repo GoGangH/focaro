@@ -9,6 +9,7 @@ import {
 } from "../services/settings";
 import { AutoLaunchSettings } from "../components/Settings/AutoLaunchSettings";
 import { AppRuleSettings } from "../components/Settings/AppRuleSettings";
+import { TitleRuleSettings } from "../components/Settings/TitleRuleSettings";
 
 const RETENTION_OPTIONS = [
   { label: "7일", value: 7 },
@@ -196,6 +197,8 @@ export function Settings() {
       </section>
 
       <AppRuleSettings />
+
+      <TitleRuleSettings />
 
       {/* 저장 버튼 */}
       <div className="settings-footer">
