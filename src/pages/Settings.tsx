@@ -24,10 +24,11 @@ export function Settings() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [rules, setRules] = useState<ClassificationRule[]>([]);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [newDomain, setNewDomain] = useState("");
   const [newCategory, setNewCategory] = useState<string>("Focus");
   const [addingRule, setAddingRule] = useState(false);
+  const [ruleError, setRuleError] = useState("");
   const [shortcutEditing, setShortcutEditing] = useState(false);
   const [shortcutInput, setShortcutInput] = useState("");
 
@@ -41,13 +42,19 @@ export function Settings() {
     loadData();
   }, [loadData]);
 
+  const showToast = (msg: string, ok: boolean) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 2500);
+  };
+
   const handleSave = async () => {
     if (!settings) return;
     setSaving(true);
     try {
       await updateSettings(settings);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      showToast("저장되었습니다", true);
+    } catch {
+      showToast("저장 실패", false);
     } finally {
       setSaving(false);
     }
@@ -71,10 +78,16 @@ export function Settings() {
   };
 
   const handleAddRule = async () => {
-    if (!newDomain.trim()) return;
+    const domain = newDomain.trim();
+    if (!domain) return;
+    if (rules.some((r) => r.domain === domain)) {
+      setRuleError(`'${domain}' 규칙이 이미 존재합니다`);
+      return;
+    }
+    setRuleError("");
     setAddingRule(true);
     try {
-      const rule = await addClassificationRule(newDomain.trim(), newCategory);
+      const rule = await addClassificationRule(domain, newCategory);
       setRules((r) => [...r, rule]);
       setNewDomain("");
     } finally {
@@ -91,6 +104,11 @@ export function Settings() {
 
   return (
     <div className="settings-page">
+      {toast && (
+        <div className={`settings-toast${toast.ok ? " settings-toast--ok" : " settings-toast--err"}`}>
+          {toast.msg}
+        </div>
+      )}
       <h2 className="settings-title">focaro 설정</h2>
 
       {/* 자동 실행 설정 */}
@@ -169,12 +187,13 @@ export function Settings() {
           ))}
         </div>
 
+        {ruleError && <p className="settings-error">{ruleError}</p>}
         <div className="settings-rule-add">
           <input
             className="settings-input"
             placeholder="도메인 입력 (예: example.com)"
             value={newDomain}
-            onChange={(e) => setNewDomain(e.target.value)}
+            onChange={(e) => { setNewDomain(e.target.value); setRuleError(""); }}
             onKeyDown={(e) => e.key === "Enter" && handleAddRule()}
           />
           <select
@@ -207,7 +226,7 @@ export function Settings() {
           onClick={handleSave}
           disabled={saving}
         >
-          {saved ? "저장됨 ✓" : saving ? "저장 중..." : "저장"}
+          {saving ? "저장 중..." : "저장"}
         </button>
       </div>
     </div>

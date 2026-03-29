@@ -2217,3 +2217,79 @@ body.dark-bg {
   color: #ffd60a;
   font-weight: 600;
 }
+
+/* Skeleton loading */
+.dash-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.dash-skeleton__bar {
+  height: 16px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+  width: 80%;
+}
+
+.dash-skeleton__bar--lg {
+  height: 48px;
+  width: 100%;
+}
+
+.dash-skeleton__bar--sm {
+  width: 50%;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Today focus time in Dropdown header */
+.dd-today-focus {
+  font-size: 12px;
+  color: #8e8e93;
+}
+
+/* Settings toast */
+.settings-toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 1000;
+  pointer-events: none;
+  animation: toast-in 0.2s ease;
+}
+
+.settings-toast--ok {
+  background: rgba(48, 209, 88, 0.2);
+  border: 1px solid rgba(48, 209, 88, 0.4);
+  color: #30d158;
+}
+
+.settings-toast--err {
+  background: rgba(255, 69, 58, 0.2);
+  border: 1px solid rgba(255, 69, 58, 0.4);
+  color: #ff453a;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Settings error message */
+.settings-error {
+  font-size: 12px;
+  color: #ff453a;
+  margin: 4px 0 8px;
+}
