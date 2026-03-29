@@ -82,6 +82,22 @@ export function Dashboard() {
     loadData(date);
   }, [date, loadData]);
 
+  // 오늘 날짜를 보는 중이면 30초마다 자동 갱신
+  useEffect(() => {
+    if (date !== todayDateStr()) return;
+    const id = setInterval(() => loadData(date), 30_000);
+    return () => clearInterval(id);
+  }, [date, loadData]);
+
+  // 창이 포커스를 받거나 탭이 visible 되면 즉시 갱신
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") loadData(date);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [date, loadData]);
+
   const TABS: { id: Tab; label: string }[] = [
     { id: "timeline", label: "타임라인" },
     { id: "sites", label: "Top Sites" },
@@ -96,43 +112,45 @@ export function Dashboard() {
 
   return (
     <div className="dashboard">
-      <div className="dash-header">
-        <h1 className="dash-title">Dashboard</h1>
-        <div className="dash-header-actions">
-          <ExportButton />
-        </div>
-        {isDayTab && (
-          <div className="dash-date-nav">
-            <button
-              className="dash-date-btn"
-              onClick={() => setDate((d) => shiftDate(d, -1))}
-              aria-label="이전 날"
-            >
-              ‹
-            </button>
-            <DatePicker value={date} max={todayDateStr()} onChange={setDate} />
-            <button
-              className="dash-date-btn"
-              onClick={() => setDate((d) => shiftDate(d, 1))}
-              disabled={date >= todayDateStr()}
-              aria-label="다음 날"
-            >
-              ›
-            </button>
+      <div className="dash-sticky-top">
+        <div className="dash-header">
+          <h1 className="dash-title">Dashboard</h1>
+          <div className="dash-header-actions">
+            <ExportButton />
           </div>
-        )}
-      </div>
+          {isDayTab && (
+            <div className="dash-date-nav">
+              <button
+                className="dash-date-btn"
+                onClick={() => setDate((d) => shiftDate(d, -1))}
+                aria-label="이전 날"
+              >
+                ‹
+              </button>
+              <DatePicker value={date} max={todayDateStr()} onChange={setDate} />
+              <button
+                className="dash-date-btn"
+                onClick={() => setDate((d) => shiftDate(d, 1))}
+                disabled={date >= todayDateStr()}
+                aria-label="다음 날"
+              >
+                ›
+              </button>
+            </div>
+          )}
+        </div>
 
-      <div className="dash-tabs">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            className={`dash-tab${tab === t.id ? " dash-tab--active" : ""}`}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
+        <div className="dash-tabs">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              className={`dash-tab${tab === t.id ? " dash-tab--active" : ""}`}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="dash-content">

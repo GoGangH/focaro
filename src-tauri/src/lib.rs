@@ -260,9 +260,14 @@ fn init_menubar_panel(app_handle: &tauri::AppHandle, window: &WebviewWindow) {
 
     let panel = window.to_panel().unwrap();
 
-    // 메뉴바 레벨 바로 위 (25) — NSPopUpMenuWindowLevel(101)보다 낮아도
-    // NSPanel + NonActivatingPanel 조합이 전체화면 위에 뜨는 것을 보장
-    panel.set_level(NSMainMenuWindowLevel + 1);
+    // NSPopUpMenuWindowLevel(101) 바로 아래 — 일반 앱 창(0) 및 Floating(3),
+    // StatusWindow(25) 모두 위에 표시. makeKeyWindow 없이 orderFrontRegardless만 사용해
+    // NonActivatingPanel 충돌 없이 안정적으로 최상단에 표시
+    panel.set_level(NSMainMenuWindowLevel + 76); // = 100
+
+    // 시스템 창 그림자 비활성화 — CSS box-shadow로 직접 제어하여
+    // 창 크기 변경 시 이중 테두리(시스템 + CSS) 현상 방지
+    panel.set_has_shadow(false);
 
     // NonActivatingPanel: 패널이 키 윈도우가 되어도 앱이 활성화되지 않음
     // 다른 앱이 포커스를 잃지 않고 드롭다운만 표시됨
@@ -271,11 +276,9 @@ fn init_menubar_panel(app_handle: &tauri::AppHandle, window: &WebviewWindow) {
     panel.set_style_mask(NSWindowStyleMaskNonActivatingPanel);
 
     // CanJoinAllSpaces: 모든 스페이스(전체화면 포함)에 표시
-    // Stationary: 스페이스 전환 시 위치 유지
     // FullScreenAuxiliary: 전체화면 앱 위에 보조 창으로 표시 (핵심)
     panel.set_collection_behaviour(
         NSWindowCollectionBehavior::NSWindowCollectionBehaviorCanJoinAllSpaces
-            | NSWindowCollectionBehavior::NSWindowCollectionBehaviorStationary
             | NSWindowCollectionBehavior::NSWindowCollectionBehaviorFullScreenAuxiliary,
     );
 
@@ -325,7 +328,7 @@ fn toggle_panel(app_handle: &tauri::AppHandle, rect: Option<tauri::Rect>) {
                     let _ = w.set_position(tauri::LogicalPosition::new(x, y));
                 }
                 if let Ok(panel) = app.get_webview_panel("dropdown") {
-                    panel.show();
+                    panel.order_front_regardless();
                 }
             });
         }

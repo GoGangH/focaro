@@ -5,10 +5,23 @@
   -webkit-font-smoothing: antialiased;
 }
 
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   margin: 0;
   padding: 0;
   background: transparent;
+}
+
+body.dark-bg {
+  background: #111;
 }
 
 /* ── 드롭다운 컨테이너 ── */
@@ -1080,7 +1093,6 @@ body {
 .dd-footer {
   display: flex;
   gap: 6px;
-  padding: 0 12px 12px;
 }
 
 .dd-footer .dashboard-btn {
@@ -1487,6 +1499,14 @@ body {
 /* ── titleBarStyle: overlay — 트래픽 라이트 영역 패딩 & 드래그 ── */
 
 .dashboard {
+  padding-top: 0;
+}
+
+.dash-sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #111;
   padding-top: 28px;
 }
 
@@ -1498,6 +1518,10 @@ body {
 .dash-header button,
 .dash-header input,
 .dash-header-actions {
+  -webkit-app-region: no-drag;
+}
+
+.dash-tabs {
   -webkit-app-region: no-drag;
 }
 
