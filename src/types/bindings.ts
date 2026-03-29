@@ -100,3 +100,14 @@ export interface AppRule {
   app_name: string;
   category: string;
 }
+
+export interface HeatmapCell {
+  hour: number;    // 0-23
+  weekday: number; // 0=Mon, 6=Sun
+  focus_pct: number;
+}
+
+export interface WeekdayStat {
+  weekday: number; // 0=Mon, 6=Sun
+  avg_focus_mins: number;
+}
