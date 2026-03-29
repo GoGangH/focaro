@@ -183,6 +183,117 @@ pub async fn get_daily_focus_stats(
     })
 }
 
+/// 시간대(0~23) × 요일(0=Mon~6=Sun) 별 평균 Focus % 히트맵
+#[derive(Debug, serde::Serialize)]
+pub struct HeatmapCell {
+    pub hour: u8,
+    pub weekday: u8, // 0=Mon, 6=Sun
+    pub focus_pct: f64,
+}
+
+#[tauri::command]
+pub async fn get_hourly_heatmap(
+    state: State<'_, Mutex<AppState>>,
+    days: u32,
+) -> Result<Vec<HeatmapCell>, AppError> {
+    let pool = get_pool(&state);
+    let conn = pool.get().map_err(AppError::from)?;
+
+    // strftime('%w') = 0(Sun)~6(Sat) → 변환해서 0=Mon~6=Sun
+    let since = chrono::Utc::now().timestamp() - (days as i64 * 86400);
+    let mut stmt = conn
+        .prepare(
+            "SELECT
+               CAST(strftime('%H', datetime(started_at, 'unixepoch', 'localtime')) AS INTEGER) AS hour,
+               (CAST(strftime('%w', datetime(started_at, 'unixepoch', 'localtime')) AS INTEGER) + 6) % 7 AS weekday,
+               SUM(CASE WHEN classification = 'Focus' THEN COALESCE(duration_secs, 0) ELSE 0 END) AS focus_s,
+               SUM(COALESCE(duration_secs, 0)) AS total_s
+             FROM activities
+             WHERE started_at >= ?1 AND duration_secs > 0
+             GROUP BY hour, weekday",
+        )
+        .map_err(AppError::from)?;
+
+    let cells = stmt
+        .query_map(params![since], |row| {
+            let hour: u8 = row.get(0)?;
+            let weekday: u8 = row.get(1)?;
+            let focus_s: i64 = row.get(2)?;
+            let total_s: i64 = row.get(3)?;
+            Ok((hour, weekday, focus_s, total_s))
+        })
+        .map_err(AppError::from)?
+        .filter_map(|r| r.ok())
+        .map(|(hour, weekday, focus_s, total_s)| HeatmapCell {
+            hour,
+            weekday,
+            focus_pct: if total_s > 0 {
+                (focus_s as f64 / total_s as f64) * 100.0
+            } else {
+                0.0
+            },
+        })
+        .collect();
+
+    Ok(cells)
+}
+
+/// 요일별 평균 Focus 시간(분)
+#[derive(Debug, serde::Serialize)]
+pub struct WeekdayStat {
+    pub weekday: u8, // 0=Mon, 6=Sun
+    pub avg_focus_mins: f64,
+}
+
+#[tauri::command]
+pub async fn get_weekday_stats(
+    state: State<'_, Mutex<AppState>>,
+    days: u32,
+) -> Result<Vec<WeekdayStat>, AppError> {
+    let pool = get_pool(&state);
+    let conn = pool.get().map_err(AppError::from)?;
+    let since = chrono::Utc::now().timestamp() - (days as i64 * 86400);
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT
+               (CAST(strftime('%w', datetime(started_at, 'unixepoch', 'localtime')) AS INTEGER) + 6) % 7 AS weekday,
+               strftime('%Y-%m-%d', datetime(started_at, 'unixepoch', 'localtime')) AS day,
+               SUM(CASE WHEN classification = 'Focus' THEN COALESCE(duration_secs, 0) ELSE 0 END) AS focus_s
+             FROM activities
+             WHERE started_at >= ?1 AND duration_secs > 0
+             GROUP BY weekday, day",
+        )
+        .map_err(AppError::from)?;
+
+    // (weekday → Vec<focus_secs per day>)
+    let mut map: std::collections::HashMap<u8, Vec<f64>> = std::collections::HashMap::new();
+    stmt.query_map(params![since], |row| {
+        let weekday: u8 = row.get(0)?;
+        let focus_s: i64 = row.get(2)?;
+        Ok((weekday, focus_s))
+    })
+    .map_err(AppError::from)?
+    .filter_map(|r| r.ok())
+    .for_each(|(wd, fs)| {
+        map.entry(wd).or_default().push(fs as f64 / 60.0);
+    });
+
+    let mut stats: Vec<WeekdayStat> = (0u8..7)
+        .map(|wd| {
+            let vals = map.get(&wd).cloned().unwrap_or_default();
+            let avg = if vals.is_empty() {
+                0.0
+            } else {
+                vals.iter().sum::<f64>() / vals.len() as f64
+            };
+            WeekdayStat { weekday: wd, avg_focus_mins: avg }
+        })
+        .collect();
+    stats.sort_by_key(|s| s.weekday);
+    Ok(stats)
+}
+
 /// 지금까지 추적된 고유 앱 이름 목록 반환 (앱 규칙 설정용)
 #[tauri::command]
 pub async fn get_tracked_apps(

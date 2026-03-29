@@ -12,6 +12,7 @@ import { WeeklyReport } from "../components/Dashboard/WeeklyReport";
 import { TrendChart } from "../components/Dashboard/TrendChart";
 import { HabitInsights } from "../components/Dashboard/HabitInsights";
 import { ExportButton } from "../components/Dashboard/ExportButton";
+import { PatternView } from "../components/Dashboard/PatternView";
 
 function todayDateStr(): string {
   return new Date().toISOString().split("T")[0];
@@ -23,7 +24,7 @@ function shiftDate(dateStr: string, days: number): string {
   return d.toISOString().split("T")[0];
 }
 
-type Tab = "timeline" | "sites" | "score" | "refs" | "weekly" | "trend";
+type Tab = "timeline" | "sites" | "score" | "refs" | "weekly" | "trend" | "pattern";
 
 class TabErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   constructor(props: { children: ReactNode }) {
@@ -104,6 +105,7 @@ export function Dashboard() {
     { id: "score", label: "Focus Score" },
     { id: "weekly", label: "주간 리포트" },
     { id: "trend", label: "트렌드" },
+    { id: "pattern", label: "패턴" },
     { id: "refs", label: "References" },
   ];
 
@@ -186,6 +188,7 @@ export function Dashboard() {
                   onRefresh={() => getReferences().then(setRefs)}
                 />
               )}
+              {tab === "pattern" && <PatternView />}
             </>
           )}
         </TabErrorBoundary>
