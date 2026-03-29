@@ -31,7 +31,7 @@
         "height": 650,
         "visible": false,
         "resizable": true,
-        "titleBarStyle": "overlay",
+        "titleBarStyle": "Overlay",
         "hiddenTitle": true
       },
       {
@@ -41,7 +41,7 @@
         "height": 280,
         "visible": false,
         "resizable": false,
-        "titleBarStyle": "overlay",
+        "titleBarStyle": "Overlay",
         "hiddenTitle": true
       },
       {
@@ -51,7 +51,7 @@
         "height": 500,
         "visible": false,
         "resizable": false,
-        "titleBarStyle": "overlay",
+        "titleBarStyle": "Overlay",
         "hiddenTitle": true
       },
       {
@@ -61,7 +61,7 @@
         "height": 460,
         "visible": false,
         "resizable": false,
-        "titleBarStyle": "overlay",
+        "titleBarStyle": "Overlay",
         "hiddenTitle": true,
         "center": true
       }
