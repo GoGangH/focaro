@@ -354,16 +354,16 @@ title_rules (domain+keyword) → domain_rules (domain) → app_rules (app_name) 
 
 ### 백엔드
 
-- [ ] TG001 `src-tauri/src/commands/activity.rs`: `get_hourly_heatmap(days: u32)` 커맨드 — 시간(0~23) × 요일(0~6) 별 평균 Focus % 반환
-- [ ] TG002 `src-tauri/src/commands/activity.rs`: `get_weekday_stats(days: u32)` 커맨드 — 요일별 평균 Focus 시간(분) 반환
-- [ ] TG003 `src-tauri/src/lib.rs`: 커맨드 등록
+- [x] TG001 `src-tauri/src/commands/activity.rs`: `get_hourly_heatmap(days: u32)` 커맨드 — 시간(0~23) × 요일(0~6) 별 평균 Focus % 반환
+- [x] TG002 `src-tauri/src/commands/activity.rs`: `get_weekday_stats(days: u32)` 커맨드 — 요일별 평균 Focus 시간(분) 반환
+- [x] TG003 `src-tauri/src/lib.rs`: 커맨드 등록
 
 ### 프론트엔드
 
-- [ ] TG004 [P] `src/types/bindings.ts`: `HeatmapCell` (`hour`, `weekday`, `focus_pct`), `WeekdayStat` (`weekday`, `avg_focus_mins`) 인터페이스 추가
-- [ ] TG005 [P] `src/services/activity.ts`: `getHourlyHeatmap`, `getWeekdayStats` 추가
-- [ ] TG006 `src/components/Dashboard/PatternView.tsx`: 히트맵 그리드(24×7) + 요일별 바 차트 구현
-- [ ] TG007 `src/pages/Dashboard.tsx`: `패턴` 탭 추가 및 `PatternView` 연결
+- [x] TG004 [P] `src/types/bindings.ts`: `HeatmapCell` (`hour`, `weekday`, `focus_pct`), `WeekdayStat` (`weekday`, `avg_focus_mins`) 인터페이스 추가
+- [x] TG005 [P] `src/services/activity.ts`: `getHourlyHeatmap`, `getWeekdayStats` 추가
+- [x] TG006 `src/components/Dashboard/PatternView.tsx`: 히트맵 그리드(24×7) + 요일별 바 차트 구현
+- [x] TG007 `src/pages/Dashboard.tsx`: `패턴` 탭 추가 및 `PatternView` 연결
 
 ---
 
