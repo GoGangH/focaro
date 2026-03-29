@@ -256,3 +256,43 @@ pub fn query_trend(pool: &DbPool, days: i64) -> Result<Vec<TrendPoint>, AppError
 
     Ok(rows)
 }
+
+/// 날짜 범위 활동 내보내기용 전체 조회
+pub fn query_export_activities(
+    pool: &DbPool,
+    start_date: &str,
+    end_date: &str,
+) -> Result<Vec<ActivityRow>, AppError> {
+    let conn = pool.get().map_err(AppError::from)?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, session_id, app_name, url, domain, classification, started_at, duration_secs, title
+             FROM activities
+             WHERE date(started_at, 'unixepoch') >= ?1
+               AND date(started_at, 'unixepoch') <= ?2
+               AND duration_secs IS NOT NULL
+             ORDER BY started_at ASC",
+        )
+        .map_err(AppError::from)?;
+
+    let rows = stmt
+        .query_map(rusqlite::params![start_date, end_date], |r| {
+            let ts: i64 = r.get(6)?;
+            Ok(ActivityRow {
+                id: r.get(0)?,
+                session_id: r.get(1)?,
+                app_name: r.get(2)?,
+                url: r.get(3)?,
+                domain: r.get(4)?,
+                title: r.get(8)?,
+                classification: r.get(5)?,
+                started_at: unix_to_iso(ts),
+                duration_secs: r.get(7)?,
+            })
+        })
+        .map_err(AppError::from)?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    Ok(rows)
+}

@@ -296,9 +296,9 @@ Phase 1~10 전체 구현 완료 (2026-03-21). 이하는 v2 확장 Phase.
 
 **목표**: 데이터 주권 + 외부 활용
 
-- [ ] TD001 [P] `src-tauri/src/commands/export.rs`: `export_data(start_date, end_date, format)` — CSV/JSON 생성 후 파일 저장 다이얼로그
-- [ ] TD002 [P] `src/components/Dashboard/ExportButton.tsx`: 날짜 범위 선택 + 형식 선택 (CSV/JSON) + 내보내기 버튼
-- [ ] TD003 `src/pages/Dashboard.tsx` 업데이트: ExportButton 추가
+- [x] TD001 [P] `src-tauri/src/commands/export.rs`: `export_data(start_date, end_date, format)` — CSV/JSON 생성 후 Downloads 폴더 저장 + opener로 폴더 열기
+- [x] TD002 [P] `src/components/Dashboard/ExportButton.tsx`: 날짜 범위 선택 + 형식 선택 (CSV/JSON) + 내보내기 버튼
+- [x] TD003 `src/pages/Dashboard.tsx` 업데이트: ExportButton 추가
 
 ---
 

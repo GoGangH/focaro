@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Component } from "react";
+import type { ReactNode } from "react";
 import type { Activity, DomainSummary, FocusMetrics, Reference, SessionEvent } from "../types/bindings";
 import { getActivityTimeline, getTopSites, getDailyFocusStats, getSessionEvents } from "../services/activity";
 import { getReferences } from "../services/reference";
@@ -10,6 +11,7 @@ import { DatePicker } from "../components/Dashboard/DatePicker";
 import { WeeklyReport } from "../components/Dashboard/WeeklyReport";
 import { TrendChart } from "../components/Dashboard/TrendChart";
 import { HabitInsights } from "../components/Dashboard/HabitInsights";
+import { ExportButton } from "../components/Dashboard/ExportButton";
 
 function todayDateStr(): string {
   return new Date().toISOString().split("T")[0];
@@ -22,6 +24,29 @@ function shiftDate(dateStr: string, days: number): string {
 }
 
 type Tab = "timeline" | "sites" | "score" | "refs" | "weekly" | "trend";
+
+class TabErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="dash-error">
+          <p>이 탭을 불러오는 중 오류가 발생했습니다.</p>
+          <button className="dash-tab" onClick={() => this.setState({ error: null })}>
+            다시 시도
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export function Dashboard() {
   const [date, setDate] = useState(todayDateStr);
@@ -73,6 +98,9 @@ export function Dashboard() {
     <div className="dashboard">
       <div className="dash-header">
         <h1 className="dash-title">Dashboard</h1>
+        <div className="dash-header-actions">
+          <ExportButton />
+        </div>
         {isDayTab && (
           <div className="dash-date-nav">
             <button
@@ -108,39 +136,41 @@ export function Dashboard() {
       </div>
 
       <div className="dash-content">
-        {loading && isDayTab ? (
-          <p className="dash-loading">로딩 중...</p>
-        ) : (
-          <>
-            {tab === "timeline" && <ActivityTimeline activities={activities} sessionEvents={sessionEvents} />}
-            {tab === "sites" && <TopSites sites={sites} />}
-            {tab === "score" && <FocusScore metrics={metrics} />}
-            {tab === "weekly" && (
-              <div className="weekly-section">
-                <div className="weekly-section__block">
-                  <h3 className="weekly-section__subtitle">이번 주</h3>
-                  <WeeklyReport weekOffset={0} />
+        <TabErrorBoundary key={tab}>
+          {loading && isDayTab ? (
+            <p className="dash-loading">로딩 중...</p>
+          ) : (
+            <>
+              {tab === "timeline" && <ActivityTimeline activities={activities} sessionEvents={sessionEvents} />}
+              {tab === "sites" && <TopSites sites={sites} />}
+              {tab === "score" && <FocusScore metrics={metrics} />}
+              {tab === "weekly" && (
+                <div className="weekly-section">
+                  <div className="weekly-section__block">
+                    <h3 className="weekly-section__subtitle">이번 주</h3>
+                    <WeeklyReport weekOffset={0} />
+                  </div>
+                  <div className="weekly-section__block">
+                    <h3 className="weekly-section__subtitle">지난 주</h3>
+                    <WeeklyReport weekOffset={-1} />
+                  </div>
                 </div>
-                <div className="weekly-section__block">
-                  <h3 className="weekly-section__subtitle">지난 주</h3>
-                  <WeeklyReport weekOffset={-1} />
+              )}
+              {tab === "trend" && (
+                <div className="trend-section">
+                  <TrendChart />
+                  <HabitInsights />
                 </div>
-              </div>
-            )}
-            {tab === "trend" && (
-              <div className="trend-section">
-                <TrendChart />
-                <HabitInsights />
-              </div>
-            )}
-            {tab === "refs" && (
-              <SavedReferences
-                references={refs}
-                onRefresh={() => getReferences().then(setRefs)}
-              />
-            )}
-          </>
-        )}
+              )}
+              {tab === "refs" && (
+                <SavedReferences
+                  references={refs}
+                  onRefresh={() => getReferences().then(setRefs)}
+                />
+              )}
+            </>
+          )}
+        </TabErrorBoundary>
       </div>
     </div>
   );

@@ -24,14 +24,18 @@ interface Props {
 
 export function WeeklyReport({ weekOffset = 0 }: Props) {
   const [stats, setStats] = useState<WeeklyDayStat[]>([]);
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(() => {
+    const base = new Date();
+    base.setDate(base.getDate() + weekOffset * 7);
+    return getMonday(base);
+  });
 
   useEffect(() => {
     const base = new Date();
     base.setDate(base.getDate() + weekOffset * 7);
     const monday = getMonday(base);
     setStartDate(monday);
-    getWeeklyReport(monday).then(setStats);
+    getWeeklyReport(monday).then(setStats).catch(() => setStats([]));
   }, [weekOffset]);
 
   // 7일 슬롯 생성 (데이터 없는 날은 0으로)
